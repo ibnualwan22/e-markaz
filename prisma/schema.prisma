@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String            @id @default(cuid())
+  username        String            @unique
+  password        String
+  roleId          String
+  role            Role              @relation(fields: [roleId], references: [id])
+  santri          Santri?
+  absensiPengajar AbsensiPengajar[] // Jika pengajar
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  permissions RolePermission[]
+  users       User[]
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  module      String // e.g., "PERIODE", "PROGRAM", "SANTRI", "PENDAFTAR", "MATERI", "ABSENSI", "AKUN", "ROLE", "DASHBOARD"
+  action      String // e.g., "CREATE", "READ", "UPDATE", "DELETE"
+  roles       RolePermission[]
+
+  @@unique([module, action])
+}
+
+model RolePermission {
+  id           String     @id @default(cuid())
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model Periode {
+  id           String        @id @default(cuid())
+  nama         String
+  tanggalBuka  DateTime
+  tanggalTutup DateTime
+  statusAktif  Boolean       @default(false)
+  pendaftarans Pendaftaran[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Program {
+  id           String        @id @default(cuid())
+  nama         String
+  harga        Int
+  deskripsi    String?
+  statusAktif  Boolean       @default(true)
+  pendaftarans Pendaftaran[]
+  materis      Materi[]
+  sesiAbsensis SesiAbsensi[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Pendaftaran {
+  id               String   @id @default(cuid())
+  namaLengkap      String
+  jenisKelamin     String
+  tempatLahir      String
+  tanggalLahir     DateTime
+  noWa             String
+  email            String?
+  provinsiId       String
+  kotaId           String
+  kecamatanId      String
+  detailAlamat     String
+  
+  periodeId        String
+  periode          Periode  @relation(fields: [periodeId], references: [id])
+  
+  programId        String
+  program          Program  @relation(fields: [programId], references: [id])
+
+  status           String   @default("MENUNGGU") // MENUNGGU, DITERIMA, DITOLAK
+  kodeUnik         Int
+  totalBiaya       Int      // harga + kodeUnik
+  
+  santri           Santri?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Santri {
+  id            String          @id @default(cuid())
+  userId        String?         @unique
+  user          User?           @relation(fields: [userId], references: [id])
+  
+  pendaftaranId String          @unique
+  pendaftaran   Pendaftaran     @relation(fields: [pendaftaranId], references: [id])
+
+  absensiSantri AbsensiSantri[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SesiAbsensi {
+  id              String            @id @default(cuid())
+  judul           String
+  tanggal         DateTime
+  nomorSesi       Int
+  programId       String
+  program         Program           @relation(fields: [programId], references: [id])
+
+  absensiSantris   AbsensiSantri[]
+  absensiPengajars AbsensiPengajar[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AbsensiSantri {
+  id            String      @id @default(cuid())
+  status        String      // HADIR, ALPA, IZIN, SAKIT
+  keterangan    String?
+  
+  sesiId        String
+  sesi          SesiAbsensi @relation(fields: [sesiId], references: [id], onDelete: Cascade)
+  
+  santriId      String
+  santri        Santri      @relation(fields: [santriId], references: [id], onDelete: Cascade)
+
+  @@unique([sesiId, santriId])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AbsensiPengajar {
+  id            String      @id @default(cuid())
+  screenshotUrl String      // Cloudinary URL
+  statusValidasi String     @default("PENDING") // PENDING, VALID, REJECTED
+  
+  sesiId        String
+  sesi          SesiAbsensi @relation(fields: [sesiId], references: [id], onDelete: Cascade)
+  
+  pengajarId    String
+  pengajar      User        @relation(fields: [pengajarId], references: [id], onDelete: Cascade)
+
+  @@unique([sesiId, pengajarId])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Materi {
+  id           String   @id @default(cuid())
+  judul        String
+  deskripsi    String?
+  fileUrl      String   // Cloudinary URL for PDF/Video
+  fileType     String   @default("PDF") // PDF, VIDEO
+  isPublished  Boolean  @default(true)
+  
+  programId    String
+  program      Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
