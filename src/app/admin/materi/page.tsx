@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { Alert, Toast } from "@/lib/swal";
 import { getMateri, saveMateri, deleteMateri } from "./actions";
 import { FaTrash, FaPlus, FaCheck, FaTimes, FaFilePdf, FaUpload, FaEye } from "react-icons/fa";
+import { useSession } from "next-auth/react";
+import PdfReader from "@/components/PdfReader";
 
 export default function ManajemenMateri() {
   const [programs, setPrograms] = useState<any[]>([]);
@@ -15,6 +17,14 @@ export default function ManajemenMateri() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({ id: "", judul: "", deskripsi: "", fileUrl: "", isPublished: true });
+  const [activeViewingMateri, setActiveViewingMateri] = useState<any>(null);
+  
+  const { data: session } = useSession();
+  const currentUser = session?.user ? {
+    id: session.user.id || "",
+    username: session.user.name || "Admin",
+    role: session.user.role || "ADMIN"
+  } : null;
 
   useEffect(() => {
     fetch("/api/pendaftaran/program").then(r => r.json()).then(setPrograms);
@@ -168,9 +178,16 @@ export default function ManajemenMateri() {
                </div>
                
                <div className="mt-6 flex justify-between border-t border-border pt-4">
-                  <a href={item.fileUrl} target="_blank" className="btn bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 py-2">
+                  <button onClick={() => setActiveViewingMateri({
+                      id: item.id,
+                      judul: item.judul,
+                      deskripsi: item.deskripsi,
+                      fileUrl: item.fileUrl,
+                      createdAt: item.createdAt
+                    })} 
+                    className="btn bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 py-2">
                      <FaEye /> Lihat modul
-                  </a>
+                  </button>
                   <button onClick={() => handleDelete(item.id)} className="btn bg-red-500/10 text-red-500 hover:bg-red-500/20 py-2 !px-3">
                      <FaTrash />
                   </button>
@@ -181,7 +198,7 @@ export default function ManajemenMateri() {
       )}
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4">
           <div className="card w-full max-w-md animate-[fadeIn_0.2s_ease-out]">
             <h3 className="text-xl font-bold mb-4">{formData.id ? 'Edit' : 'Tambah'} Materi PDF</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -224,6 +241,15 @@ export default function ManajemenMateri() {
             </form>
           </div>
         </div>
+      )}
+
+      {activeViewingMateri && (
+        <PdfReader
+          activeMateri={activeViewingMateri}
+          currentUser={currentUser}
+          onClose={() => setActiveViewingMateri(null)}
+          readOnly={false}
+        />
       )}
     </div>
   );

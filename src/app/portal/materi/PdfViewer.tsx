@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { FaFilePdf, FaArrowLeft, FaExpand, FaCompress, FaExternalLinkAlt } from "react-icons/fa";
+import { FaFilePdf } from "react-icons/fa";
+import PdfReader from "@/components/PdfReader";
 
 interface Materi {
   id: string;
@@ -11,61 +12,23 @@ interface Materi {
   createdAt: string;
 }
 
-export default function PdfViewer({ materiList }: { materiList: Materi[] }) {
-  const [activeMateri, setActiveMateri] = useState<Materi | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+interface UserContext {
+  id: string;
+  username: string;
+  role: string | any;
+}
 
-  // Perbaiki URL cloudinary & proxy agar PDF tampil inline (tidak auto-download)
-  const fixPdfUrl = (url: string) => {
-    let fixed = url;
-    // Fix resource type path jika salah
-    if (fixed.endsWith('.pdf') && fixed.includes('/image/upload/')) {
-      fixed = fixed.replace('/image/upload/', '/raw/upload/');
-    }
-    // Proxy melalui API agar Content-Disposition: inline
-    return `/api/pdf-proxy?url=${encodeURIComponent(fixed)}`;
-  };
+export default function PdfViewer({ materiList, currentUser }: { materiList: Materi[], currentUser: UserContext }) {
+  const [activeMateri, setActiveMateri] = useState<Materi | null>(null);
 
   // === Tampilan Reader Saat PDF Dibuka ===
   if (activeMateri) {
-    const pdfUrl = fixPdfUrl(activeMateri.fileUrl);
-
     return (
-      <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-background p-4' : ''}`}>
-        {/* Header Bar */}
-        <div className="flex items-center justify-between mb-4 gap-4">
-          <button 
-            onClick={() => { setActiveMateri(null); setIsFullscreen(false); }}
-            className="btn btn-secondary shrink-0"
-          >
-            <FaArrowLeft /> Kembali
-          </button>
-          <h2 className="text-lg font-bold text-white truncate flex-1 text-center">
-            {activeMateri.judul}
-          </h2>
-          <div className="flex gap-2 shrink-0">
-            <button
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              className="btn btn-secondary"
-              title={isFullscreen ? 'Kecilkan' : 'Perbesar'}
-            >
-              {isFullscreen ? <FaCompress /> : <FaExpand />}
-            </button>
-            <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary" title="Buka di Tab Baru">
-              <FaExternalLinkAlt />
-            </a>
-          </div>
-        </div>
-        
-        {/* Embedded PDF */}
-        <div className={`border border-border rounded-xl overflow-hidden bg-white ${isFullscreen ? 'h-[calc(100vh-100px)]' : 'h-[75vh]'}`}>
-          <iframe
-            src={`${pdfUrl}#toolbar=1&navpanes=0`}
-            className="w-full h-full"
-            title={activeMateri.judul}
-          />
-        </div>
-      </div>
+      <PdfReader 
+        activeMateri={activeMateri} 
+        currentUser={currentUser} 
+        onClose={() => setActiveMateri(null)} 
+      />
     );
   }
 
@@ -73,7 +36,7 @@ export default function PdfViewer({ materiList }: { materiList: Materi[] }) {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-2 text-white">Materi Pembelajaran</h1>
-      <p className="text-gray-400 mb-8">Modul dan referensi PDF yang dipublish oleh pengajar Anda.</p>
+      <p className="text-gray-400 mb-8">Modul dan referensi PDF yang dipublish oleh pengajar Anda. Anda bisa memberi catatan per halaman.</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {materiList.length === 0 ? (
@@ -96,7 +59,7 @@ export default function PdfViewer({ materiList }: { materiList: Materi[] }) {
              
              <div className="mt-6 border-t border-border pt-4">
                 <button className="btn btn-primary w-full justify-center">
-                   <FaFilePdf /> Baca Materi
+                   <FaFilePdf className="mr-2" /> Buka Materi interaktif
                 </button>
              </div>
           </div>

@@ -15,6 +15,7 @@ model User {
   role            Role              @relation(fields: [roleId], references: [id])
   santri          Santri?
   absensiPengajar AbsensiPengajar[] // Jika pengajar
+  komentars       KomentarMateri[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -173,6 +174,23 @@ model Materi {
   programId    String
   program      Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
 
+  komentars   KomentarMateri[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model KomentarMateri {
+  id         String   @id @default(cuid())
+  halaman    Int      // nomor halaman PDF
+  isi        String   // isi komentar/catatan
+  
+  materiId   String
+  materi     Materi   @relation(fields: [materiId], references: [id], onDelete: Cascade)
+  
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }

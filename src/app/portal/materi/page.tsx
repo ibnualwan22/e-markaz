@@ -31,5 +31,11 @@ export default async function PortalMateri() {
     createdAt: m.createdAt.toISOString()
   }));
 
-  return <PdfViewer materiList={serialized} />;
+  const currentUser = {
+    id: session?.user?.id || "",
+    username: session?.user?.name || "Guest",
+    role: session?.user?.role || "SANTRI"
+  };
+
+  return <PdfViewer materiList={serialized} currentUser={currentUser} />;
 }
