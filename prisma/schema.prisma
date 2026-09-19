@@ -16,6 +16,8 @@ model User {
   santri          Santri?
   absensiPengajar AbsensiPengajar[] // Jika pengajar
   komentars       KomentarMateri[]
+  annotations     Annotation[]      @relation("UserAnnotations")
+  bookmarks       Bookmark[]        @relation("UserBookmarks")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -54,6 +56,7 @@ model Periode {
   tanggalTutup DateTime
   statusAktif  Boolean       @default(false)
   pendaftarans Pendaftaran[]
+  annotations  Annotation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -175,6 +178,8 @@ model Materi {
   program      Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
 
   komentars   KomentarMateri[]
+  annotations Annotation[]
+  bookmarks   Bookmark[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -191,6 +196,42 @@ model KomentarMateri {
   userId     String
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Annotation {
+  id          String   @id @default(cuid())
+  
+  materiId    String
+  materi      Materi   @relation(fields: [materiId], references: [id], onDelete: Cascade)
+  
+  periodeId   String
+  periode     Periode  @relation(fields: [periodeId], references: [id], onDelete: Cascade)
+  
+  halaman     Int      // nomor halaman PDF
+  tipe        String   // HIGHLIGHT, DRAWING, TEXTBOX, STICKY_COMMENT
+  data        Json     // struktur json untuk canvas
+  
+  userId      String
+  user        User     @relation("UserAnnotations", fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Bookmark {
+  id         String   @id @default(cuid())
+  
+  judul      String   // "Definisi Penting Bab 2"
+  halaman    Int      // nomor halaman
+  
+  materiId   String
+  materi     Materi   @relation(fields: [materiId], references: [id], onDelete: Cascade)
+  
+  userId     String
+  user       User     @relation("UserBookmarks", fields: [userId], references: [id], onDelete: Cascade)
+  
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }

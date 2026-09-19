@@ -5,11 +5,14 @@ import { Alert, Toast } from "@/lib/swal";
 import { getMateri, saveMateri, deleteMateri } from "./actions";
 import { FaTrash, FaPlus, FaCheck, FaTimes, FaFilePdf, FaUpload, FaEye } from "react-icons/fa";
 import { useSession } from "next-auth/react";
-import PdfReader from "@/components/PdfReader";
+import dynamic from 'next/dynamic';
+const PdfReader = dynamic(() => import('@/components/PdfReader'), { ssr: false });
 
 export default function ManajemenMateri() {
   const [programs, setPrograms] = useState<any[]>([]);
+  const [periodes, setPeriodes] = useState<any[]>([]);
   const [selectedProgram, setSelectedProgram] = useState<string>("");
+  const [selectedPeriode, setSelectedPeriode] = useState<string>("");
   const [data, setData] = useState<any[]>([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,6 +31,13 @@ export default function ManajemenMateri() {
 
   useEffect(() => {
     fetch("/api/pendaftaran/program").then(r => r.json()).then(setPrograms);
+    fetch("/api/pendaftaran/periode").then(r => r.json()).then(data => {
+       setPeriodes(data);
+       if (data.length > 0) {
+          const aktif = data.find((d: any) => d.statusAktif);
+          setSelectedPeriode(aktif ? aktif.id : data[0].id);
+       }
+    });
   }, []);
 
   const loadMateri = async (programId: string) => {
@@ -143,16 +153,29 @@ export default function ManajemenMateri() {
       </div>
 
       <div className="card mb-8">
-        <div className="form-group mb-0">
-          <label className="form-label">Pilih Program</label>
-          <select 
-            className="form-control max-w-md" 
-            value={selectedProgram}
-            onChange={(e) => setSelectedProgram(e.target.value)}
-          >
-            <option value="">-- Pilih Program --</option>
-            {programs.map(p => <option key={p.id} value={p.id}>{p.nama}</option>)}
-          </select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+           <div className="form-group mb-0">
+             <label className="form-label">Pilih Program</label>
+             <select 
+               className="form-control" 
+               value={selectedProgram}
+               onChange={(e) => setSelectedProgram(e.target.value)}
+             >
+               <option value="">-- Pilih Program --</option>
+               {programs.map(p => <option key={p.id} value={p.id}>{p.nama}</option>)}
+             </select>
+           </div>
+           
+           <div className="form-group mb-0">
+             <label className="form-label">Pilih Periode (Untuk Anotasi & Diskusi)</label>
+             <select 
+               className="form-control" 
+               value={selectedPeriode}
+               onChange={(e) => setSelectedPeriode(e.target.value)}
+             >
+               {periodes.map(p => <option key={p.id} value={p.id}>{p.nama} {p.statusAktif ? '(Aktif)' : ''}</option>)}
+             </select>
+           </div>
         </div>
       </div>
 
@@ -249,6 +272,8 @@ export default function ManajemenMateri() {
           currentUser={currentUser}
           onClose={() => setActiveViewingMateri(null)}
           readOnly={false}
+          periodeId={selectedPeriode}
+          isGuruOverride={true}
         />
       )}
     </div>

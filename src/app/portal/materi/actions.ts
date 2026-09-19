@@ -4,8 +4,23 @@ import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { pusherServer } from "@/lib/pusher";
 
 const prisma = new PrismaClient();
+
+const userSelectArg = {
+  username: true,
+  role: { select: { name: true } },
+  santri: {
+    select: {
+      pendaftaran: {
+        select: {
+          namaLengkap: true
+        }
+      }
+    }
+  }
+};
 
 export async function getKomentarByMateri(materiId: string, halaman: number) {
   try {
@@ -15,9 +30,9 @@ export async function getKomentarByMateri(materiId: string, halaman: number) {
         halaman 
       },
       include: {
-        user: { select: { username: true, role: { select: { name: true } } } }
+        user: { select: userSelectArg }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'asc' }
     });
     
     return { success: true, data: komentars };
@@ -41,9 +56,15 @@ export async function tambahKomentar(materiId: string, halaman: number, isi: str
         userId: session.user.id
       },
       include: {
-        user: { select: { username: true, role: { select: { name: true } } } }
+        user: { select: userSelectArg }
       }
     });
+
+    try {
+      await pusherServer.trigger(`materi-${materiId}-hal-${halaman}`, 'new-comment', komentar);
+    } catch (pushErr) {
+      console.error("Pusher trigger failed:", pushErr);
+    }
 
     return { success: true, data: komentar };
   } catch (error: any) {
@@ -68,6 +89,13 @@ export async function hapusKomentar(komentarId: string) {
     }
 
     await prisma.komentarMateri.delete({ where: { id: komentarId } });
+    
+    try {
+      await pusherServer.trigger(`materi-${komentar.materiId}-hal-${komentar.halaman}`, 'delete-comment', { id: komentarId });
+    } catch (pushErr) {
+      console.error("Pusher trigger failed:", pushErr);
+    }
+
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

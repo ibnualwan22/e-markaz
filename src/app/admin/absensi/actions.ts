@@ -7,8 +7,18 @@ const prisma = new PrismaClient();
 
 export async function getSesiByProgram(programId: string) {
   try {
+    const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+    const startOfDay = new Date(`${todayStr}T00:00:00.000Z`);
+    const endOfDay = new Date(`${todayStr}T23:59:59.999Z`);
+
     return await prisma.sesiAbsensi.findMany({
-      where: { programId },
+      where: { 
+        programId,
+        tanggal: {
+          gte: startOfDay,
+          lte: endOfDay
+        }
+      },
       include: {
         absensiSantris: true,
         absensiPengajars: {
@@ -32,14 +42,33 @@ export async function getSantriByProgram(programId: string) {
   });
 }
 
-export async function createSesi(data: { judul: string, tanggal: string, programId: string, nomorSesi: number }) {
+export async function createSesi(data: { programId: string }) {
   try {
+    const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local timezone
+    const startOfDay = new Date(`${todayStr}T00:00:00.000Z`);
+    const endOfDay = new Date(`${todayStr}T23:59:59.999Z`);
+
+    const sesiCount = await prisma.sesiAbsensi.count({
+      where: {
+        programId: data.programId,
+        tanggal: {
+          gte: startOfDay,
+          lte: endOfDay
+        }
+      }
+    });
+
+    const nomorSesi = sesiCount + 1;
+    const today = new Date();
+    const dateReadable = today.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const judul = `Absen ${dateReadable} — Sesi ${nomorSesi}`;
+
     await prisma.sesiAbsensi.create({
       data: {
-        judul: data.judul,
-        tanggal: new Date(data.tanggal),
+        judul: judul,
+        tanggal: today,
         programId: data.programId,
-        nomorSesi: data.nomorSesi
+        nomorSesi: nomorSesi
       }
     });
     revalidatePath("/admin/absensi");
@@ -70,8 +99,8 @@ export async function saveAbsenPengajar(sesiId: string, pengajarId: string, scre
   try {
     await prisma.absensiPengajar.upsert({
       where: { sesiId_pengajarId: { sesiId, pengajarId } },
-      update: { screenshotUrl, statusValidasi: "PENDING" },
-      create: { sesiId, pengajarId, screenshotUrl, statusValidasi: "PENDING" }
+      update: { screenshotUrl, statusValidasi: "VALID" },
+      create: { sesiId, pengajarId, screenshotUrl, statusValidasi: "VALID" }
     });
     return { success: true };
   } catch (error: any) {

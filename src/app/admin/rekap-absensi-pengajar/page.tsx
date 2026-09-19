@@ -4,13 +4,14 @@ import { FaExternalLinkAlt } from "react-icons/fa";
 
 const prisma = new PrismaClient();
 
-export default async function RekapAbsensiPengajar({ searchParams }: { searchParams: { programId?: string } }) {
+export default async function RekapAbsensiPengajar({ searchParams }: { searchParams: Promise<{ programId?: string }> }) {
+  const resolvedParams = await searchParams;
   const programs = await prisma.program.findMany({
     where: { statusAktif: true },
     orderBy: { nama: 'asc' }
   });
 
-  const selectedProgramId = searchParams.programId || (programs.length > 0 ? programs[0].id : null);
+  const selectedProgramId = resolvedParams.programId || (programs.length > 0 ? programs[0].id : null);
 
   let absensiData: any[] = [];
 
@@ -75,7 +76,7 @@ export default async function RekapAbsensiPengajar({ searchParams }: { searchPar
                    </td>
                    <td>
                      <a href={item.screenshotUrl} target="_blank" className="flex items-center gap-2 text-sm text-primary hover:underline">
-                       <FaExternalLinkAlt /> Lihat Gambar
+                       <img src={item.screenshotUrl} alt="SS" className="w-16 h-10 object-cover border border-white/20 rounded shadow" />
                      </a>
                    </td>
                    <td>

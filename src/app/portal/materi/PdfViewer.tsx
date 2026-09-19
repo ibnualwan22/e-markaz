@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { FaFilePdf } from "react-icons/fa";
-import PdfReader from "@/components/PdfReader";
+import dynamic from 'next/dynamic';
+const PdfReader = dynamic(() => import('@/components/PdfReader'), { ssr: false });
 
 interface Materi {
   id: string;
@@ -16,6 +17,7 @@ interface UserContext {
   id: string;
   username: string;
   role: string | any;
+  periodeId?: string;
 }
 
 export default function PdfViewer({ materiList, currentUser }: { materiList: Materi[], currentUser: UserContext }) {
@@ -28,6 +30,7 @@ export default function PdfViewer({ materiList, currentUser }: { materiList: Mat
         activeMateri={activeMateri} 
         currentUser={currentUser} 
         onClose={() => setActiveMateri(null)} 
+        periodeId={currentUser.periodeId}
       />
     );
   }

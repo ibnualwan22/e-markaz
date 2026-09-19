@@ -14,8 +14,7 @@ export default function ManajemenAbsensi() {
   const [sesiList, setSesiList] = useState<any[]>([]);
   const [santriList, setSantriList] = useState<any[]>([]);
   
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({ judul: "", tanggal: "", nomorSesi: 1 });
+
   
   const [absensiMap, setAbsensiMap] = useState<Record<string, Record<string, string>>>({}); // sesiId -> santriId -> status
   const [isUploading, setIsUploading] = useState(false);
@@ -51,19 +50,15 @@ export default function ManajemenAbsensi() {
     loadSesiAndSantri(selectedProgram);
   }, [selectedProgram]);
 
-  const handleBuatSesi = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleBuatSesi = async () => {
     if (!selectedProgram) return Alert.fire('Error', 'Pilih program dulu', 'error');
     
     const res = await createSesi({
-      ...formData,
-      programId: selectedProgram,
-      nomorSesi: Number(formData.nomorSesi)
+      programId: selectedProgram
     });
     
     if (res.success) {
       Toast.fire({ icon: 'success', title: 'Sesi berhasil dibuat!' });
-      setIsModalOpen(false);
       loadSesiAndSantri(selectedProgram);
     } else {
       Alert.fire('Gagal', res.error, 'error');
@@ -133,11 +128,8 @@ export default function ManajemenAbsensi() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-white">Manajemen Absensi</h1>
         {selectedProgram && (
-          <button onClick={() => {
-            setFormData({ judul: "", tanggal: "", nomorSesi: sesiList.length + 1 });
-            setIsModalOpen(true);
-          }} className="btn btn-primary">
-            <FaPlus /> Tambah Sesi
+          <button onClick={handleBuatSesi} className="btn btn-primary">
+            <FaPlus /> Tambah Absen
           </button>
         )}
       </div>
@@ -216,26 +208,30 @@ export default function ManajemenAbsensi() {
                        <tr><td colSpan={3} className="text-center">Tidak ada santri di program ini</td></tr>
                      ) : (
                        santriList.map((santri, idx) => {
-                         const currentStatus = absensiMap[sesi.id]?.[santri.id] || "ALPA";
+                         const currentStatus = absensiMap[sesi.id]?.[santri.id] || "";
                          return (
                            <tr key={santri.id}>
                              <td>{idx + 1}</td>
                              <td className="font-medium text-white">{santri.pendaftaran.namaLengkap}</td>
                              <td>
-                               <select 
-                                 className={`p-2 rounded text-sm font-semibold border border-transparent outline-none ${
-                                   currentStatus === "HADIR" ? "bg-green-500/20 text-green-500" : 
-                                   currentStatus === "ALPA" ? "bg-red-500/20 text-red-500" : 
-                                   "bg-yellow-500/20 text-yellow-500"
-                                 }`}
-                                 value={currentStatus}
-                                 onChange={(e) => updateAbsensiLocal(sesi.id, santri.id, e.target.value)}
-                               >
-                                 <option value="HADIR" className="bg-surface text-white">HADIR</option>
-                                 <option value="ALPA" className="bg-surface text-white">ALPA (TIDAK MASUK)</option>
-                                 <option value="IZIN" className="bg-surface text-white">IZIN</option>
-                                 <option value="SAKIT" className="bg-surface text-white">SAKIT</option>
-                               </select>
+                               <div className="flex flex-wrap gap-2">
+                                 <button 
+                                   onClick={() => updateAbsensiLocal(sesi.id, santri.id, "HADIR")}
+                                   className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all border border-transparent ${currentStatus === "HADIR" ? "bg-green-500 text-white shadow-lg shadow-green-500/30" : "bg-surface hover:bg-surface-hover text-gray-400 border-border"}`}
+                                 >HADIR</button>
+                                 <button 
+                                   onClick={() => updateAbsensiLocal(sesi.id, santri.id, "IZIN")}
+                                   className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all border border-transparent ${currentStatus === "IZIN" ? "bg-yellow-500 text-white shadow-lg shadow-yellow-500/30" : "bg-surface hover:bg-surface-hover text-gray-400 border-border"}`}
+                                 >IZIN</button>
+                                 <button 
+                                   onClick={() => updateAbsensiLocal(sesi.id, santri.id, "SAKIT")}
+                                   className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all border border-transparent ${currentStatus === "SAKIT" ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30" : "bg-surface hover:bg-surface-hover text-gray-400 border-border"}`}
+                                 >SAKIT</button>
+                                 <button 
+                                   onClick={() => updateAbsensiLocal(sesi.id, santri.id, "ALPA")}
+                                   className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all border border-transparent ${currentStatus === "ALPA" ? "bg-red-500 text-white shadow-lg shadow-red-500/30" : "bg-surface hover:bg-surface-hover text-gray-400 border-border"}`}
+                                 >ALPA</button>
+                               </div>
                              </td>
                            </tr>
                          )
@@ -258,31 +254,7 @@ export default function ManajemenAbsensi() {
         onChange={handleFileUpload} 
       />
 
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="card w-full max-w-md animate-[fadeIn_0.2s_ease-out]">
-            <h3 className="text-xl font-bold mb-4">Buat Sesi Baru</h3>
-            <form onSubmit={handleBuatSesi} className="space-y-4">
-              <div className="form-group">
-                <label className="form-label">Nomor Sesi (Otomatis)</label>
-                <input type="number" readOnly value={formData.nomorSesi} className="form-control bg-gray-800" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Judul / Materi Pertemuan</label>
-                <input type="text" placeholder="Contoh: Pengenalan Huruf" required value={formData.judul} onChange={(e) => setFormData({...formData, judul: e.target.value})} className="form-control" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Tanggal Pelaksanaan</label>
-                <input type="date" required value={formData.tanggal} onChange={(e) => setFormData({...formData, tanggal: e.target.value})} className="form-control" />
-              </div>
-              <div className="flex justify-end gap-2 pt-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-secondary">Batal</button>
-                <button type="submit" className="btn btn-primary">Simpan Sesi</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Modal is removed since addition is completely dynamic and one-click */}
     </div>
   );
 }
