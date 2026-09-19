@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/AuthProvider";
+import NavigationLoaderProvider from "@/components/NavigationLoader";
 
 const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"] });
 
@@ -19,7 +20,9 @@ export default function RootLayout({
     <html lang="id">
       <body className={outfit.className}>
         <AuthProvider>
-          {children}
+          <NavigationLoaderProvider>
+            {children}
+          </NavigationLoaderProvider>
         </AuthProvider>
       </body>
     </html>

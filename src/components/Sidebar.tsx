@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { Alert } from "@/lib/swal";
+import { useNavigationLoader } from "./NavigationLoader";
 import { 
   FaHome, FaCalendarAlt, FaBookOpen, FaUserGraduate, 
   FaUsers, FaClipboardList, FaFilePdf, FaUserShield, FaSignOutAlt, FaBars, FaTimes
@@ -14,6 +15,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const { startNavigation } = useNavigationLoader();
 
   const handleLogout = async () => {
     const confirm = await Alert.fire({
@@ -79,6 +81,9 @@ export default function Sidebar() {
           const isActive = pathname === item.href;
           return (
             <Link key={item.name} href={item.href} 
+              onClick={() => {
+                if (!isActive) startNavigation();
+              }}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 isActive ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'hover:bg-surface-hover hover:text-white'
               }`}

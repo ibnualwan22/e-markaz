@@ -6,11 +6,13 @@ import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { Alert } from "@/lib/swal";
 import { FaHome, FaFilePdf, FaClipboardList, FaSignOutAlt, FaBookOpen, FaBars, FaTimes } from "react-icons/fa";
+import { useNavigationLoader } from "./NavigationLoader";
 
 export default function SidebarSantri() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const { startNavigation } = useNavigationLoader();
 
   const handleLogout = async () => {
     const confirm = await Alert.fire({
@@ -64,6 +66,9 @@ export default function SidebarSantri() {
           const isActive = pathname === item.href;
           return (
             <Link key={item.name} href={item.href} 
+              onClick={() => {
+                if (!isActive) startNavigation();
+              }}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 isActive ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'hover:bg-surface-hover hover:text-white'
               }`}
