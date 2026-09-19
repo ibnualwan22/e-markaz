@@ -169,25 +169,52 @@ export default function PdfReader({
     e.preventDefault();
     if (!newKomentar.trim() || !activeMateri || !currentUser) return;
     const res = await tambahKomentar(activeMateri.id, pageNumber, newKomentar);
-    if (res.success) setNewKomentar("");
+    if (res.success) {
+      setNewKomentar("");
+      Toast.fire({ icon: 'success', title: 'Pesan terkirim!' });
+    } else {
+      Alert.fire('Gagal', 'Gagal mengirim pesan.', 'error');
+    }
   };
 
   const handleDeleteKomentar = async (id: string) => {
-    await hapusKomentar(id);
+    const confirm = await Alert.fire({
+      title: 'Hapus Pesan?',
+      text: 'Pesan diskusi ini akan dihapus permanen.',
+      icon: 'warning',
+      showCancelButton: true
+    });
+    if (confirm.isConfirmed) {
+      await hapusKomentar(id);
+      Toast.fire({ icon: 'success', title: 'Dihapus' });
+    }
   };
 
   const handleSaveAnnotation = async (tipe: string, data: any) => {
      setIsSaving(true);
      const res = await saveAnnotation(activeMateri.id, pageNumber, periodeId, tipe, data);
-     if (!res.success) Alert.fire('Error', res.error, 'error');
+     if (!res.success) {
+       Alert.fire('Error', res.error, 'error');
+     } else {
+       Toast.fire({ icon: 'success', title: 'Tersimpan' });
+     }
      setIsSaving(false);
   };
 
   const handleDeleteAnnotation = async (id: string) => {
-     setIsSaving(true);
-     const res = await deleteAnnotation(id);
-     if (!res.success) Alert.fire('Error', res.error, 'error');
-     setIsSaving(false);
+     const confirm = await Alert.fire({
+       title: 'Hapus Catatan?',
+       text: 'Aksi ini tidak dapat dibatalkan.',
+       icon: 'warning',
+       showCancelButton: true
+     });
+     if (confirm.isConfirmed) {
+       setIsSaving(true);
+       const res = await deleteAnnotation(id);
+       if (!res.success) Alert.fire('Error', res.error, 'error');
+       else Toast.fire({ icon: 'success', title: 'Terhapus' });
+       setIsSaving(false);
+     }
   };
 
   // Convert DOM Text Selection to Canvas Highlights

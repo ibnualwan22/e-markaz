@@ -1,19 +1,31 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import { Alert } from "@/lib/swal";
 import { 
   FaHome, FaCalendarAlt, FaBookOpen, FaUserGraduate, 
-  FaUsers, FaClipboardList, FaFilePdf, FaUserShield, FaSignOutAlt 
+  FaUsers, FaClipboardList, FaFilePdf, FaUserShield, FaSignOutAlt, FaBars, FaTimes
 } from "react-icons/fa";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = async () => {
-    await signOut({ callbackUrl: '/' });
+    const confirm = await Alert.fire({
+      title: 'Keluar Sistem?',
+      text: 'Sesi Anda akan diakhiri. Anda butuh login ulang nantinya.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Keluar'
+    });
+    if (confirm.isConfirmed) {
+      await signOut({ callbackUrl: '/' });
+    }
   };
 
   const navItems = [
@@ -40,8 +52,23 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-64 bg-surface border-r border-border min-h-screen flex flex-col fixed left-0 top-0 text-gray-300">
-      <div className="p-4 border-b border-border flex items-center justify-center">
+    <>
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className="md:hidden fixed top-4 right-4 z-50 p-3 bg-primary text-white rounded-lg shadow-lg"
+      >
+        {isOpen ? <FaTimes /> : <FaBars />}
+      </button>
+
+      {isOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      <div className={`w-64 bg-surface border-r border-border h-[100dvh] flex flex-col fixed left-0 top-0 text-gray-300 z-50 transition-transform duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
+        <div className="p-4 border-b border-border flex items-center justify-center shrink-0">
         <h2 className="text-xl font-bold text-white tracking-widest uppercase">E-Markaz</h2>
       </div>
       
@@ -79,5 +106,6 @@ export default function Sidebar() {
         </button>
       </div>
     </div>
+    </>
   );
 }

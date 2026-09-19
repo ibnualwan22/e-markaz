@@ -11,7 +11,7 @@
 @layer components {
   /* Cards & Containers */
   .card {
-    @apply bg-surface border border-border rounded-xl p-6 shadow-lg shadow-black/50 transition-all duration-300;
+    @apply bg-surface border border-border rounded-xl p-4 md:p-6 shadow-lg shadow-black/50 transition-all duration-300;
   }
   .card:hover {
     @apply border-gray-700 shadow-black/60;
@@ -63,10 +63,10 @@
     @apply w-full text-left border-collapse;
   }
   th {
-    @apply bg-surface-hover/50 text-gray-400 font-semibold text-sm px-4 py-4 uppercase tracking-wider border-b border-border;
+    @apply bg-surface-hover/50 text-gray-400 font-semibold text-sm px-4 py-4 uppercase tracking-wider border-b border-border whitespace-nowrap;
   }
   td {
-    @apply px-4 py-4 border-b border-border/50 align-middle;
+    @apply px-4 py-4 border-b border-border/50 align-middle whitespace-nowrap;
   }
   tbody tr {
     @apply transition-colors hover:bg-surface-hover/30;
@@ -75,3 +75,4 @@
     @apply border-b-0;
   }
 }
+

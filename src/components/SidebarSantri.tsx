@@ -1,16 +1,28 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { FaHome, FaFilePdf, FaClipboardList, FaSignOutAlt, FaBookOpen } from "react-icons/fa";
+import { Alert } from "@/lib/swal";
+import { FaHome, FaFilePdf, FaClipboardList, FaSignOutAlt, FaBookOpen, FaBars, FaTimes } from "react-icons/fa";
 
 export default function SidebarSantri() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = async () => {
-    await signOut({ callbackUrl: '/' });
+    const confirm = await Alert.fire({
+      title: 'Keluar Sistem?',
+      text: 'Sesi portal Anda akan diakhiri.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Keluar'
+    });
+    if (confirm.isConfirmed) {
+      await signOut({ callbackUrl: '/' });
+    }
   };
 
   const navItems = [
@@ -20,8 +32,23 @@ export default function SidebarSantri() {
   ];
 
   return (
-    <div className="w-64 bg-surface border-r border-border min-h-screen flex flex-col fixed left-0 top-0 text-gray-300">
-      <div className="p-4 border-b border-border flex flex-col items-center justify-center bg-gradient-to-br from-blue-900/40 to-transparent">
+    <>
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className="md:hidden fixed top-4 right-4 z-50 p-3 bg-primary text-white rounded-lg shadow-lg"
+      >
+        {isOpen ? <FaTimes /> : <FaBars />}
+      </button>
+
+      {isOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      <div className={`w-64 bg-surface border-r border-border h-[100dvh] flex flex-col fixed left-0 top-0 text-gray-300 z-50 transition-transform duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
+      <div className="p-4 border-b border-border flex flex-col items-center justify-center bg-gradient-to-br from-blue-900/40 to-transparent shrink-0">
         <FaBookOpen className="text-3xl text-primary mb-2" />
         <h2 className="text-lg font-bold text-white uppercase tracking-widest text-center">Portal<br/>Santri</h2>
       </div>
@@ -55,5 +82,6 @@ export default function SidebarSantri() {
         </button>
       </div>
     </div>
+    </>
   );
 }
