@@ -1,8 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import VerifyButton from "./VerifyButton";
 import { FaExternalLinkAlt } from "react-icons/fa";
 
-const prisma = new PrismaClient();
 
 export default async function RekapAbsensiPengajar({ searchParams }: { searchParams: Promise<{ programId?: string }> }) {
   const resolvedParams = await searchParams;

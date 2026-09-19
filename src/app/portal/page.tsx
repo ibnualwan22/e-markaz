@@ -1,10 +1,9 @@
+import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { PrismaClient } from "@prisma/client";
 import { FaGraduationCap, FaCalendarCheck, FaBook } from "react-icons/fa";
 import Link from "next/link";
 
-const prisma = new PrismaClient();
 
 export default async function PortalDashboard() {
   const session = await getServerSession(authOptions);

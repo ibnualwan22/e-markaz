@@ -1,7 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { FaUserGraduate, FaUsers, FaBookOpen } from "react-icons/fa";
 
-const prisma = new PrismaClient();
 
 export default async function DashboardOverview() {
   const santriCount = await prisma.santri.count();

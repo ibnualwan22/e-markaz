@@ -1,9 +1,8 @@
 "use server";
+import { prisma } from "@/lib/prisma";
 
-import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
-const prisma = new PrismaClient();
 
 export async function setStatusValidasi(id: string, statusValidasi: string) {
   try {

@@ -1,9 +1,8 @@
+import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { PrismaClient } from "@prisma/client";
 import { FaCheck, FaTimes, FaExclamationCircle } from "react-icons/fa";
 
-const prisma = new PrismaClient();
 
 export default async function PortalAbsensi() {
   const session = await getServerSession(authOptions);

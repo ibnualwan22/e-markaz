@@ -1,8 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { FaBookOpen } from "react-icons/fa";
 import { Fragment } from "react";
 
-const prisma = new PrismaClient();
 
 // This is a Server Component, meaning data fetching is super fast and zero client JS for the rekap logic
 export default async function RekapAbsensiSantri({ searchParams }: { searchParams: Promise<{ programId?: string }> }) {

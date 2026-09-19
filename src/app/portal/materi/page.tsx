@@ -1,9 +1,8 @@
+import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { PrismaClient } from "@prisma/client";
 import PdfViewer from "./PdfViewer";
 
-const prisma = new PrismaClient();
 
 export default async function PortalMateri() {
   const session = await getServerSession(authOptions);

@@ -1,9 +1,8 @@
 "use server";
+import { prisma } from "@/lib/prisma";
 
-import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
-const prisma = new PrismaClient();
 
 const defaultModules = ["DASHBOARD", "PERIODE", "PROGRAM", "PENDAFTAR", "SANTRI", "ABSENSI", "REKAP_ABSENSI", "MATERI", "AKUN", "ROLE"];
 const defaultActions = ["READ", "CREATE", "UPDATE", "DELETE"];

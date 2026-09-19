@@ -1,10 +1,9 @@
 "use server";
+import { prisma } from "@/lib/prisma";
 
-import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
 
 export async function getPendaftaran() {
   try {

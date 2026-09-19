@@ -1,10 +1,9 @@
 "use server";
+import { prisma } from "@/lib/prisma";
 
-import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-const prisma = new PrismaClient();
 
 export async function getBookmarks(materiId: string) {
   try {
