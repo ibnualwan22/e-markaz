@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 interface LoaderContextType {
@@ -15,20 +15,28 @@ const LoaderContext = createContext<LoaderContextType>({
 
 export const useNavigationLoader = () => useContext(LoaderContext);
 
-export default function NavigationLoaderProvider({ children }: { children: React.ReactNode }) {
-  const [isNavigating, setIsNavigating] = useState(false);
+function NavigationEvents({ setIsNavigating }: { setIsNavigating: (v: boolean) => void }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Reset loading whenever route finishes changing
   useEffect(() => {
     setIsNavigating(false);
   }, [pathname, searchParams]);
+
+  return null;
+}
+
+export default function NavigationLoaderProvider({ children }: { children: React.ReactNode }) {
+  const [isNavigating, setIsNavigating] = useState(false);
 
   return (
     <LoaderContext.Provider value={{ isNavigating, startNavigation: () => setIsNavigating(true) }}>
       {children}
       
+      <Suspense fallback={null}>
+        <NavigationEvents setIsNavigating={setIsNavigating} />
+      </Suspense>
+
       {/* Global Overlay Loader */}
       {isNavigating && (
         <div className="fixed inset-0 z-[9999] bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center animate-[fadeIn_0.2s_ease-out]">
