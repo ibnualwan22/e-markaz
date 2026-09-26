@@ -5,16 +5,28 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 
-export async function getBookmarks(materiId: string) {
+export async function getBookmarks(materiId: string, includeTeacherBookmarks: boolean = false) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return { success: false, error: "Unauthenticated" };
     }
+
+    const whereClause: any = { materiId };
+    
+    if (includeTeacherBookmarks) {
+       whereClause.OR = [
+         { userId: session.user.id },
+         { user: { role: { name: { in: ['ADMIN', 'PENGAJAR', 'GURU', 'SUPERADMIN'] } } } }
+       ];
+    } else {
+       whereClause.userId = session.user.id;
+    }
+
     const bookmarks = await prisma.bookmark.findMany({
-      where: { 
-        materiId, 
-        userId: session.user.id 
+      where: whereClause,
+      include: {
+        user: { select: { username: true, role: { select: { name: true } } } }
       },
       orderBy: { halaman: 'asc' }
     });

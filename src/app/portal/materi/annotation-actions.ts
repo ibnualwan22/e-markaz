@@ -25,7 +25,7 @@ export async function getAnnotations(materiId: string, halaman: number, periodeI
     const annotations = await prisma.annotation.findMany({
       where: { 
         materiId, 
-        halaman,
+        ...(halaman !== 0 && { halaman }),
         periodeId
       },
       include: {

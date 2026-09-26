@@ -69,6 +69,11 @@ export default function ManajemenMateri() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate size (50MB)
+    if (file.size > 50 * 1024 * 1024) {
+      return Alert.fire('File Terlalu Besar', 'Maksimal ukuran file adalah 50MB.', 'warning');
+    }
+
     setIsUploading(true);
     const fd = new FormData();
     fd.append('file', file);

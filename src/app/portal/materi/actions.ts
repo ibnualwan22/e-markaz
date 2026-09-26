@@ -21,12 +21,11 @@ const userSelectArg = {
   }
 };
 
-export async function getKomentarByMateri(materiId: string, halaman: number) {
+export async function getKomentarByMateri(materiId: string) {
   try {
     const komentars = await prisma.komentarMateri.findMany({
       where: { 
         materiId, 
-        halaman 
       },
       include: {
         user: { select: userSelectArg }
@@ -40,7 +39,7 @@ export async function getKomentarByMateri(materiId: string, halaman: number) {
   }
 }
 
-export async function tambahKomentar(materiId: string, halaman: number, isi: string) {
+export async function tambahKomentar(materiId: string, isi: string) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -50,7 +49,7 @@ export async function tambahKomentar(materiId: string, halaman: number, isi: str
     const komentar = await prisma.komentarMateri.create({
       data: {
         materiId,
-        halaman,
+        halaman: 0,
         isi,
         userId: session.user.id
       },
@@ -60,7 +59,7 @@ export async function tambahKomentar(materiId: string, halaman: number, isi: str
     });
 
     try {
-      await pusherServer.trigger(`materi-${materiId}-hal-${halaman}`, 'new-comment', komentar);
+      await pusherServer.trigger(`materi-${materiId}-global`, 'new-comment', komentar);
     } catch (pushErr) {
       console.error("Pusher trigger failed:", pushErr);
     }
@@ -90,7 +89,7 @@ export async function hapusKomentar(komentarId: string) {
     await prisma.komentarMateri.delete({ where: { id: komentarId } });
     
     try {
-      await pusherServer.trigger(`materi-${komentar.materiId}-hal-${komentar.halaman}`, 'delete-comment', { id: komentarId });
+      await pusherServer.trigger(`materi-${komentar.materiId}-global`, 'delete-comment', { id: komentarId });
     } catch (pushErr) {
       console.error("Pusher trigger failed:", pushErr);
     }

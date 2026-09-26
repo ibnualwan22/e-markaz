@@ -9,16 +9,17 @@ interface Props {
   materiId: string;
   currentPage: number;
   onNavigate: (page: number) => void;
+  showTeacherNotes?: boolean;
 }
 
-export default function BookmarkSidebar({ materiId, currentPage, onNavigate }: Props) {
+export default function BookmarkSidebar({ materiId, currentPage, onNavigate, showTeacherNotes = false }: Props) {
   const [bookmarks, setBookmarks] = useState<any[]>([]);
   const [judul, setJudul] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
   const loadData = async () => {
     setIsLoading(true);
-    const res = await getBookmarks(materiId);
+    const res = await getBookmarks(materiId, showTeacherNotes);
     if (res.success && res.data) {
       setBookmarks(res.data);
     }

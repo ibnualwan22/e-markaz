@@ -169,8 +169,21 @@ export default function AnnotationCanvas({
         text.enterEditing();
         text.selectAll();
         
+        let handleEnter: (e: KeyboardEvent) => void;
+        handleEnter = (e: KeyboardEvent) => {
+           if (text.isEditing && e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              e.stopPropagation();
+              text.exitEditing();
+              document.removeEventListener('keydown', handleEnter, true);
+           }
+        };
+        
+        document.addEventListener('keydown', handleEnter, true);
+        
         // We only save text after editing is done
         text.on('editing:exited', async () => {
+           document.removeEventListener('keydown', handleEnter, true);
            if (text.text && text.text.trim()) {
              await onSave('TEXTBOX', text.toObject());
            } else {
@@ -226,6 +239,35 @@ export default function AnnotationCanvas({
       fbCanvas.off('mouse:up', handleMouseUp);
     };
   }, [fbCanvas, isEditable, activeTool, activeColor, onSave, onDelete]);
+
+  // Handle Delete/Backspace keys to remove annotations
+  useEffect(() => {
+     if (!fbCanvas || !isEditable) return;
+     
+     const handleKeyDown = async (e: KeyboardEvent) => {
+        const activeObj = fbCanvas.getActiveObject();
+        if ((e.key === 'Delete' || e.key === 'Backspace') && activeObj) {
+           // Do not delete if we are actively typing inside a textbox!
+           if ((activeObj as fabric.IText).isEditing) return;
+           
+           const activeObjects = fbCanvas.getActiveObjects();
+           if (activeObjects.length > 0) {
+              e.preventDefault(); // prevent backspace navigating back in browser
+              for (const obj of activeObjects) {
+                 if ((obj as any).data?.id) {
+                    await onDelete((obj as any).data.id);
+                 }
+                 fbCanvas.remove(obj);
+              }
+              fbCanvas.discardActiveObject();
+              fbCanvas.requestRenderAll();
+           }
+        }
+     };
+     
+     document.addEventListener('keydown', handleKeyDown);
+     return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [fbCanvas, isEditable, onDelete]);
 
   // Load Annotations from DB
   useEffect(() => {

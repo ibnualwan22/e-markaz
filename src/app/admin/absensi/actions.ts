@@ -10,7 +10,7 @@ export async function getSesiByProgram(programId: string) {
     const startOfDay = new Date(`${todayStr}T00:00:00.000Z`);
     const endOfDay = new Date(`${todayStr}T23:59:59.999Z`);
 
-    return await prisma.sesiAbsensi.findMany({
+    const sessions = await prisma.sesiAbsensi.findMany({
       where: { 
         programId,
         tanggal: {
@@ -26,6 +26,47 @@ export async function getSesiByProgram(programId: string) {
       },
       orderBy: { tanggal: "asc" }
     });
+
+    if (sessions.length === 0) {
+      const today = new Date();
+      const dateReadable = today.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      
+      await prisma.sesiAbsensi.createMany({
+        data: [
+          {
+            judul: `Absen ${dateReadable} — Sesi 1`,
+            tanggal: today,
+            programId: programId,
+            nomorSesi: 1
+          },
+          {
+            judul: `Absen ${dateReadable} — Sesi 2`,
+            tanggal: today,
+            programId: programId,
+            nomorSesi: 2
+          }
+        ]
+      });
+
+      return await prisma.sesiAbsensi.findMany({
+        where: { 
+          programId,
+          tanggal: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
+        },
+        include: {
+          absensiSantris: true,
+          absensiPengajars: {
+            include: { pengajar: true }
+          }
+        },
+        orderBy: { tanggal: "asc" }
+      });
+    }
+
+    return sessions;
   } catch (error) {
     return [];
   }

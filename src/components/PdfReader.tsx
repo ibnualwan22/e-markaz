@@ -65,6 +65,7 @@ export default function PdfReader({
   periodeId?: string;
   isGuruOverride?: boolean;
 }) {
+  const pdfWrapperRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   
   const userRole = typeof currentUser?.role === 'string' 
@@ -122,16 +123,33 @@ export default function PdfReader({
   };
 
   const loadPageData = async () => {
-     // Load Komentar
-     setIsLoadingComments(true);
-     const resK = await getKomentarByMateri(activeMateri.id, pageNumber);
-     if (resK.success && resK.data) setKomentarList(resK.data as unknown as Komentar[]);
-     setIsLoadingComments(false);
-
      // Load Annotations for this page
      const resA = await getAnnotations(activeMateri.id, pageNumber, periodeId);
      if (resA.success && resA.data) setAnnotations(resA.data);
   };
+
+  const loadGlobalComments = async () => {
+     setIsLoadingComments(true);
+     const resK = await getKomentarByMateri(activeMateri.id);
+     if (resK.success && resK.data) setKomentarList(resK.data as unknown as Komentar[]);
+     setIsLoadingComments(false);
+  };
+
+  // Effect load global comments once
+  useEffect(() => {
+    if (!activeMateri) return;
+    loadGlobalComments();
+
+    const pusher = getPusherClient();
+    const commentChannel = pusher.subscribe(`materi-${activeMateri.id}-global`);
+    commentChannel.bind('new-comment', (k: Komentar) => setKomentarList(prev => [...prev, k]));
+    commentChannel.bind('delete-comment', (data: { id: string }) => setKomentarList(prev => prev.filter(k => k.id !== data.id)));
+
+    return () => {
+      commentChannel.unbind_all();
+      commentChannel.unsubscribe();
+    };
+  }, [activeMateri]);
 
   // Effect load page data and Pusher
   useEffect(() => {
@@ -139,17 +157,11 @@ export default function PdfReader({
     loadPageData();
       
     const pusher = getPusherClient();
-    const commentChannel = pusher.subscribe(`materi-${activeMateri.id}-hal-${pageNumber}`);
-    commentChannel.bind('new-comment', (k: Komentar) => setKomentarList(prev => [...prev, k]));
-    commentChannel.bind('delete-comment', (data: { id: string }) => setKomentarList(prev => prev.filter(k => k.id !== data.id)));
-
     const annChannel = pusher.subscribe(`materi-${activeMateri.id}-hal-${pageNumber}-periode-${periodeId}`);
     annChannel.bind('new-annotation', (a: any) => setAnnotations(prev => [...prev.filter(pa => pa.id !== a.id), a]));
     annChannel.bind('delete-annotation', (data: { id: string }) => setAnnotations(prev => prev.filter(a => a.id !== data.id)));
 
     return () => {
-      commentChannel.unbind_all();
-      commentChannel.unsubscribe();
       annChannel.unbind_all();
       annChannel.unsubscribe();
     };
@@ -165,10 +177,10 @@ export default function PdfReader({
      fetchAll();
   }, [activeMateri, periodeId, annotations]); // reload if annotations change
 
-  const handlePostKomentar = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePostKomentar = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!newKomentar.trim() || !activeMateri || !currentUser) return;
-    const res = await tambahKomentar(activeMateri.id, pageNumber, newKomentar);
+    const res = await tambahKomentar(activeMateri.id, newKomentar);
     if (res.success) {
       setNewKomentar("");
       Toast.fire({ icon: 'success', title: 'Pesan terkirim!' });
@@ -297,8 +309,28 @@ export default function PdfReader({
       setBaseHeight(baseV.height);
   };
 
+  const handleToggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+       document.documentElement.requestFullscreen().catch(err => {
+         Alert.fire('Error', 'Gagal menampilkan fullscreen', 'error');
+       });
+       setIsFullscreen(true);
+    } else {
+       if (document.exitFullscreen) document.exitFullscreen();
+       setIsFullscreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
+
   return (
-    <div className={`${isFullscreen ? 'fixed inset-0 z-[100] bg-background p-4 flex flex-col' : 'flex flex-col h-full absolute inset-0 bg-background z-50 p-4'}`}>
+    <div ref={pdfWrapperRef} className={`${isFullscreen ? 'fixed inset-0 z-[9999] bg-background p-4 flex flex-col' : 'flex flex-col h-full absolute inset-0 bg-background z-50 p-4'}`}>
       
       {/* Header Bar */}
       <div className="flex items-center justify-between mb-2 gap-4 shrink-0 border-b border-border pb-2">
@@ -344,7 +376,7 @@ export default function PdfReader({
             <button onClick={() => setActiveSidebarTab(activeSidebarTab === 'comments' ? 'none' : 'comments')} className={`p-2 rounded ${activeSidebarTab === 'comments' ? 'bg-blue-500/20 text-blue-500' : 'text-gray-400 hover:text-white'}`} title="Komentar Forum"><FaRegCommentDots /></button>
           </div>
 
-          <button onClick={() => setIsFullscreen(!isFullscreen)} className="btn btn-secondary">{isFullscreen ? <FaCompress /> : <FaExpand />}</button>
+          <button onClick={handleToggleFullscreen} className="btn btn-secondary">{isFullscreen ? <FaCompress /> : <FaExpand />}</button>
         </div>
       </div>
       
@@ -410,6 +442,7 @@ export default function PdfReader({
                   materiId={activeMateri.id} 
                   currentPage={pageNumber} 
                   onNavigate={(p) => setPageNumber(p)} 
+                  showTeacherNotes={showTeacherNotes}
                />
             )}
 
