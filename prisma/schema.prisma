@@ -67,6 +67,7 @@ model Program {
   nama         String
   harga        Int
   deskripsi    String?
+  zoomUrl      String?
   statusAktif  Boolean       @default(true)
   pendaftarans Pendaftaran[]
   materis      Materi[]
@@ -129,6 +130,7 @@ model SesiAbsensi {
 
   absensiSantris   AbsensiSantri[]
   absensiPengajars AbsensiPengajar[]
+  rekamanSesis     RekamanSesi[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -162,6 +164,18 @@ model AbsensiPengajar {
   pengajar      User        @relation(fields: [pengajarId], references: [id], onDelete: Cascade)
 
   @@unique([sesiId, pengajarId])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RekamanSesi {
+  id        String   @id @default(cuid())
+  judul     String
+  url       String
+  
+  sesiId    String
+  sesi      SesiAbsensi @relation(fields: [sesiId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

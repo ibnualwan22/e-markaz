@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { Alert } from "@/lib/swal";
-import { FaHome, FaFilePdf, FaClipboardList, FaSignOutAlt, FaBookOpen, FaBars, FaTimes } from "react-icons/fa";
+import { FaHome, FaFilePdf, FaClipboardList, FaSignOutAlt, FaBookOpen, FaBars, FaTimes, FaVideo } from "react-icons/fa";
 import { useNavigationLoader } from "./NavigationLoader";
 
 export default function SidebarSantri() {
@@ -31,6 +31,8 @@ export default function SidebarSantri() {
     { name: "Dashboard Portal", href: "/portal", icon: <FaHome /> },
     { name: "Akses Materi PDF", href: "/portal/materi", icon: <FaFilePdf /> },
     { name: "Riwayat Absensi", href: "/portal/absensi", icon: <FaClipboardList /> },
+    { name: "Rekap Kehadiran", href: "/portal/rekap", icon: <FaClipboardList /> },
+    { name: "Zoom & Rekaman", href: "/portal/zoom-rekaman", icon: <FaVideo /> },
   ];
 
   return (

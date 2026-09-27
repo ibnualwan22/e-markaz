@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { FaBookOpen } from "react-icons/fa";
 import { Fragment } from "react";
+import ExportExcelButton from "@/components/ExportExcelButton";
 
 
 // This is a Server Component, meaning data fetching is super fast and zero client JS for the rekap logic
@@ -87,6 +88,27 @@ export default async function RekapAbsensiSantri({ searchParams }: { searchParam
     }
   }
 
+  const exportData = rekapData.map((item, index) => {
+    const row: Record<string, any> = {
+      "No": index + 1,
+      "Nama Santri": item.nama,
+    };
+    groupedSesi.forEach(group => {
+      group.sessions.forEach(sesi => {
+        const abs = item.attendanceMap[sesi.id];
+        const status = abs ? abs.status : "ALPA";
+        const time = abs ? new Date(abs.updatedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : "";
+        row[`${group.date} (Sesi ${sesi.nomorSesi})`] = `${status} ${time ? `(${time})` : ''}`.trim();
+      });
+    });
+    row["Hadir"] = item.hadir;
+    row["Izin"] = item.izin;
+    row["Sakit"] = item.sakit;
+    row["Alpa"] = item.alpa;
+    row["Total Kehadiran %"] = `${item.percentage}%`;
+    return row;
+  });
+
   return (
     <div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-border pb-4">
@@ -95,14 +117,21 @@ export default async function RekapAbsensiSantri({ searchParams }: { searchParam
           <p className="text-gray-400">Tampilan harian terperinci sesi program.</p>
         </div>
         
-        <form className="mt-4 md:mt-0 flex gap-2">
-           <select name="programId" defaultValue={selectedProgramId || ""} className="form-control max-w-sm w-full">
-             {programs.map(p => (
-               <option key={p.id} value={p.id}>{p.nama}</option>
-             ))}
-           </select>
-           <button type="submit" className="btn btn-primary">Filter</button>
-        </form>
+        <div className="mt-4 md:mt-0 flex flex-wrap gap-2 items-center">
+          <form className="flex gap-2">
+             <select name="programId" defaultValue={selectedProgramId || ""} className="form-control max-w-sm w-full">
+               {programs.map(p => (
+                 <option key={p.id} value={p.id}>{p.nama}</option>
+               ))}
+             </select>
+             <button type="submit" className="btn btn-primary">Filter</button>
+          </form>
+          <ExportExcelButton 
+            data={exportData} 
+            filename={`Rekap_Santri_${programName.replace(/[^a-zA-Z0-9]/g, '_')}`} 
+            sheetName="Rekap" 
+          />
+        </div>
       </div>
 
       <div className="card w-full overflow-x-auto p-0">

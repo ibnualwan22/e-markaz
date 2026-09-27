@@ -8,7 +8,7 @@ import { Alert } from "@/lib/swal";
 import { useNavigationLoader } from "./NavigationLoader";
 import { 
   FaHome, FaCalendarAlt, FaBookOpen, FaUserGraduate, 
-  FaUsers, FaClipboardList, FaFilePdf, FaUserShield, FaSignOutAlt, FaBars, FaTimes
+  FaUsers, FaClipboardList, FaFilePdf, FaUserShield, FaSignOutAlt, FaBars, FaTimes, FaVideo
 } from "react-icons/fa";
 
 export default function Sidebar() {
@@ -37,9 +37,10 @@ export default function Sidebar() {
     { name: "Data Pendaftar", href: "/admin/pendaftar", icon: <FaUserGraduate />, module: "PENDAFTAR" },
     { name: "Data Santri Global", href: "/admin/santri", icon: <FaUsers />, module: "SANTRI" },
     { name: "Manajemen Absensi", href: "/admin/absensi", icon: <FaClipboardList />, module: "ABSENSI" },
-    { name: "Rekap Santri", href: "/admin/rekap-absensi-santri", icon: <FaClipboardList />, module: "REKAP_ABSENSI" },
-    { name: "Rekap Pengajar", href: "/admin/rekap-absensi-pengajar", icon: <FaClipboardList />, module: "REKAP_ABSENSI" },
+    { name: "Rekap Santri", href: "/admin/rekap-absensi-santri", icon: <FaClipboardList />, module: "ABSENSI" },
+    { name: "Rekap Pengajar", href: "/admin/rekap-absensi-pengajar", icon: <FaClipboardList />, module: "ABSENSI" },
     { name: "Manajemen Materi", href: "/admin/materi", icon: <FaFilePdf />, module: "MATERI" },
+    { name: "Zoom & Rekaman", href: "/admin/zoom-rekaman", icon: <FaVideo />, module: "PROGRAM" },
     { name: "Manajemen Akun", href: "/admin/akun", icon: <FaUserShield />, module: "AKUN" },
     { name: "Manajemen Role", href: "/admin/role", icon: <FaUserShield />, module: "ROLE" },
   ];

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import VerifyButton from "./VerifyButton";
 import { FaExternalLinkAlt } from "react-icons/fa";
+import ExportExcelButton from "@/components/ExportExcelButton";
 
 
 export default async function RekapAbsensiPengajar({ searchParams }: { searchParams: Promise<{ programId?: string }> }) {
@@ -31,6 +32,16 @@ export default async function RekapAbsensiPengajar({ searchParams }: { searchPar
     });
   }
 
+  const exportData = absensiData.map((item, index) => ({
+    "No": index + 1,
+    "Nama Pengajar": item.pengajar.username,
+    "Nomor Sesi": item.sesi.nomorSesi,
+    "Judul Sesi": item.sesi.judul,
+    "Tanggal": new Date(item.sesi.tanggal).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+    "Bukti SS": item.screenshotUrl,
+    "Status Validasi": item.statusValidasi
+  }));
+
   return (
     <div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-border pb-4">
@@ -39,14 +50,21 @@ export default async function RekapAbsensiPengajar({ searchParams }: { searchPar
           <p className="text-gray-400">Pastikan screenshot kehadiran valid.</p>
         </div>
         
-        <form className="mt-4 md:mt-0 flex gap-2">
-           <select name="programId" defaultValue={selectedProgramId || ""} className="form-control max-w-sm w-full">
-             {programs.map(p => (
-               <option key={p.id} value={p.id}>{p.nama}</option>
-             ))}
-           </select>
-           <button type="submit" className="btn btn-primary">Filter</button>
-        </form>
+        <div className="mt-4 md:mt-0 flex flex-wrap gap-2 items-center">
+          <form className="flex gap-2">
+             <select name="programId" defaultValue={selectedProgramId || ""} className="form-control max-w-sm w-full">
+               {programs.map(p => (
+                 <option key={p.id} value={p.id}>{p.nama}</option>
+               ))}
+             </select>
+             <button type="submit" className="btn btn-primary">Filter</button>
+          </form>
+          <ExportExcelButton 
+            data={exportData} 
+            filename="Rekap_Absensi_Pengajar" 
+            sheetName="Pengajar_Absensi" 
+          />
+        </div>
       </div>
 
       <div className="card table-wrapper">
