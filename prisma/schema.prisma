@@ -68,6 +68,7 @@ model Program {
   harga        Int
   deskripsi    String?
   zoomUrl      String?
+  durasiBulan  Int           @default(1)
   statusAktif  Boolean       @default(true)
   pendaftarans Pendaftaran[]
   materis      Materi[]

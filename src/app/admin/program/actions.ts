@@ -15,7 +15,7 @@ export async function getPrograms() {
   }
 }
 
-export async function saveProgram(id: string | null, data: { nama: string, harga: number, deskripsi: string, statusAktif: boolean }) {
+export async function saveProgram(id: string | null, data: { nama: string, harga: number, deskripsi: string, durasiBulan: number, statusAktif: boolean }) {
   try {
     if (id) {
       await prisma.program.update({ where: { id }, data });
