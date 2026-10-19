@@ -9,10 +9,19 @@ export default function ManajemenProgram() {
   const [data, setData] = useState<any[]>([]);
   const [formData, setFormData] = useState({ id: "", nama: "", harga: 0, deskripsi: "", statusAktif: false });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activePeriode, setActivePeriode] = useState<any>(null);
 
   const loadData = async () => {
     const res = await getPrograms();
     setData(res);
+    // Ambil periode aktif
+    try {
+      const pRes = await fetch("/api/periode-aktif");
+      if (pRes.ok) {
+        const pData = await pRes.json();
+        setActivePeriode(pData);
+      }
+    } catch {}
   };
 
   useEffect(() => {
@@ -81,7 +90,14 @@ export default function ManajemenProgram() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-white">Manajemen Program</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-white">Manajemen Program</h1>
+          {activePeriode && (
+            <p className="text-sm text-blue-400 mt-1">
+              📅 Periode aktif: <strong>{activePeriode.nama}</strong>
+            </p>
+          )}
+        </div>
         <button onClick={() => openModal()} className="btn btn-primary">
           <FaPlus /> Tambah Program
         </button>

@@ -83,6 +83,7 @@ export default function Sidebar() {
           return (
             <Link key={item.name} href={item.href} 
               onClick={() => {
+                setIsOpen(false);
                 if (!isActive) startNavigation();
               }}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
