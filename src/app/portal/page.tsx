@@ -38,7 +38,32 @@ export default async function PortalDashboard() {
     <div>
       <h1 className="text-3xl font-bold mb-2 text-white">Dashboard Santri</h1>
       <p className="text-gray-400 mb-8">Selamat datang kembali, {santriData.pendaftaran.namaLengkap}!</p>
-      
+
+      {santriData.pendaftaran.status === "MENUNGGU" && (
+        <div className="card border-yellow-500/30 bg-gradient-to-br from-yellow-900/20 to-orange-900/10 p-6 mb-8">
+          <h3 className="font-semibold text-lg text-yellow-400 mb-4">Menunggu Pembayaran</h3>
+          <p className="text-gray-300 mb-2">
+            Total yang harus dibayarkan: <span className="text-2xl font-bold text-white">Rp {santriData.pendaftaran.totalBiaya.toLocaleString('id-ID')}</span>
+          </p>
+          <p className="text-gray-400 text-sm mb-4">
+            (termasuk kode unik Rp {santriData.pendaftaran.kodeUnik})
+          </p>
+          <div className="bg-black/30 rounded-lg p-4 mb-4">
+            <p className="text-sm text-gray-400">Transfer ke:</p>
+            <p className="font-semibold text-white">Bank BSI: 1234567890</p>
+            <p className="text-sm text-gray-400">a.n. Markaz Arabiyah (Dummy)</p>
+          </div>
+          <a
+            href={`https://wa.me/6281234567890?text=${encodeURIComponent(`Assalamu'alaikum, saya ${santriData.pendaftaran.namaLengkap} sudah melakukan pembayaran pendaftaran sebesar Rp ${santriData.pendaftaran.totalBiaya.toLocaleString('id-ID')} untuk program ${santriData.pendaftaran.program.nama}. Mohon konfirmasi.`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-primary inline-flex items-center gap-2"
+          >
+            Konfirmasi via WhatsApp
+          </a>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         
         <div className="card border-blue-500/20 bg-gradient-to-br from-surface to-blue-900/10 p-6 flex flex-col justify-between">

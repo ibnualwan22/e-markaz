@@ -28,9 +28,11 @@ export default function Login() {
       } else if (res?.ok) {
         const sessionRes = await fetch("/api/auth/session");
         const session = await sessionRes.json();
-        
+
         if (session?.user?.role === "Santri") {
-          router.push("/portal");
+          // Santri tidak boleh login di sini, arahkan ke login santri
+          await fetch("/api/auth/signout", { method: "POST" });
+          Alert.fire("Akses Ditolak", "Halaman ini khusus admin/staff. Santri silakan login di portal santri.", "error");
         } else {
           router.push("/admin");
         }
@@ -48,7 +50,7 @@ export default function Login() {
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
         <div className="text-center mb-8 mt-2">
           <h1 className="text-3xl font-bold text-white mb-2">E-Markaz</h1>
-          <p className="text-gray-400">Portal Login Khusus Santri</p>
+          <p className="text-gray-400">Login Admin / Staff</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">

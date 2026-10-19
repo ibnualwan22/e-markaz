@@ -159,7 +159,7 @@ export default function Pendaftaran() {
             </div>
             <p className="text-sm text-yellow-500 mt-2">Ingat sandi baik-baik untuk login di portal santri.</p>
             <p className="text-sm text-gray-400 mt-2">
-              Sudah punya akun? <Link href="/login" className="text-blue-400 hover:underline font-semibold">Login di sini</Link>
+              Sudah punya akun? <Link href="/santri/login" className="text-blue-400 hover:underline font-semibold">Login di sini</Link>
             </p>
           </div>
 

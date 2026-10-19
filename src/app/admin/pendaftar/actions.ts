@@ -52,65 +52,82 @@ function generatePassword() {
 
 export async function accPendaftaran(id: string) {
   try {
-    const pendaftar = await prisma.pendaftaran.findUnique({ where: { id } });
+    const pendaftar = await prisma.pendaftaran.findUnique({
+      where: { id },
+      include: { santri: { include: { user: true } } }
+    });
     if (!pendaftar || pendaftar.status !== "MENUNGGU") {
       throw new Error("Data tidak valid atau sudah diproses");
     }
 
-    // Pakai username & password dari form pendaftaran
-    // Fallback ke generate otomatis untuk data lama
+    // Cari santri & user yang sudah dibuat saat pendaftaran
+    // Fallback: buat baru jika data lama (sebelum fitur ini)
     let username: string;
-    let hashedPassword: string;
     let plainPassword: string | null = null;
 
-    if ((pendaftar as any).username && (pendaftar as any).passwordHash) {
-      username = (pendaftar as any).username;
-      hashedPassword = (pendaftar as any).passwordHash;
-    } else {
-      username = generateUsername(pendaftar.namaLengkap, id);
-      plainPassword = generatePassword();
-      hashedPassword = await bcrypt.hash(plainPassword, 10);
-    }
-
-    let santriRole = await prisma.role.findUnique({ where: { name: 'Santri' } });
-    if (!santriRole) {
-      santriRole = await prisma.role.create({ data: { name: 'Santri' } });
-    }
-
-    const transaction = await prisma.$transaction(async (tx) => {
-      const updatedPendaftaran = await tx.pendaftaran.update({
+    await prisma.$transaction(async (tx) => {
+      // Update status pendaftaran
+      await tx.pendaftaran.update({
         where: { id },
         data: { status: "DITERIMA" }
       });
 
-      const user = await tx.user.create({
-        data: {
-          username,
-          password: hashedPassword,
-          roleId: santriRole!.id
+      if (pendaftar.santri && pendaftar.santri.user) {
+        // Data baru: user & santri sudah ada, tinggal aktifkan
+        username = pendaftar.santri.user.username;
+        const masaBerlaku = new Date();
+        masaBerlaku.setMonth(masaBerlaku.getMonth() + 1);
+        await tx.santri.update({
+          where: { id: pendaftar.santri.id },
+          data: { isActive: true, masaBerlaku }
+        });
+      } else {
+        // Fallback data lama: buat user & santri baru
+        const p = pendaftar as any;
+        if (p.username && p.passwordHash) {
+          username = p.username;
+        } else {
+          username = generateUsername(pendaftar.namaLengkap, id);
+          plainPassword = generatePassword();
         }
-      });
+        const hashedPassword = p.passwordHash || await bcrypt.hash(plainPassword!, 10);
 
-      const masaBerlaku = new Date();
-      masaBerlaku.setMonth(masaBerlaku.getMonth() + 1);
-
-      const santri = await tx.santri.create({
-        data: {
-          userId: user.id,
-          pendaftaranId: id,
-          isActive: true,
-          masaBerlaku
+        let santriRole = await tx.role.findUnique({ where: { name: 'Santri' } });
+        if (!santriRole) {
+          santriRole = await tx.role.create({ data: { name: 'Santri' } });
         }
-      });
 
-      return { user, updatedPendaftaran };
+        // Cek apakah user sudah ada (dari pendaftaran baru tapi santri gagal dibuat)
+        let user = await tx.user.findUnique({ where: { username } });
+        if (!user) {
+          user = await tx.user.create({
+            data: {
+              username,
+              password: hashedPassword,
+              roleId: santriRole!.id
+            }
+          });
+        }
+
+        const masaBerlaku = new Date();
+        masaBerlaku.setMonth(masaBerlaku.getMonth() + 1);
+
+        await tx.santri.create({
+          data: {
+            userId: user.id,
+            pendaftaranId: id,
+            isActive: true,
+            masaBerlaku
+          }
+        });
+      }
     });
 
     revalidatePath("/admin/pendaftar");
     if (plainPassword) {
-      return { success: true, credentials: { username, password: plainPassword } };
+      return { success: true, credentials: { username: username!, password: plainPassword } };
     }
-    return { success: true, credentials: { username, password: "(sesuai yang didaftarkan)" } };
+    return { success: true, credentials: { username: username!, password: "(sesuai yang didaftarkan)" } };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
