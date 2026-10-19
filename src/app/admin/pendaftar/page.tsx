@@ -2,21 +2,30 @@
 
 import { useState, useEffect } from "react";
 import { Alert, Toast } from "@/lib/swal";
-import { getPendaftaran, accPendaftaran, rejectPendaftaran } from "./actions";
+import { getPendaftaran, accPendaftaran, rejectPendaftaran, getAllPeriode } from "./actions";
 import { FaCheck, FaTimes, FaEye } from "react-icons/fa";
 import Swal from "sweetalert2";
 
 export default function DataPendaftar() {
   const [data, setData] = useState<any[]>([]);
   const [filterStatus, setFilterStatus] = useState("SEMUA");
+  const [periodes, setPeriodes] = useState<any[]>([]);
+  const [filterPeriode, setFilterPeriode] = useState<string>("");
 
-  const loadData = async () => {
-    const res = await getPendaftaran();
+  const loadData = async (periodeId?: string) => {
+    const res = await getPendaftaran(periodeId || undefined);
     setData(res);
   };
 
   useEffect(() => {
-    loadData();
+    getAllPeriode().then((p) => {
+      setPeriodes(p);
+      // Default ke periode aktif
+      const aktif = p.find((x: any) => x.statusAktif);
+      const defaultId = aktif ? aktif.id : "";
+      setFilterPeriode(defaultId);
+      loadData(defaultId);
+    });
   }, []);
 
   const handleAcc = async (id: string, nama: string) => {
@@ -100,16 +109,33 @@ export default function DataPendaftar() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-white">Data Pendaftar</h1>
-        <select 
-          className="form-control w-auto" 
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-        >
-          <option value="SEMUA">Semua Status</option>
-          <option value="MENUNGGU">Menunggu</option>
-          <option value="DITERIMA">Diterima</option>
-          <option value="DITOLAK">Ditolak</option>
-        </select>
+        <div className="flex gap-2">
+          <select
+            className="form-control w-auto"
+            value={filterPeriode}
+            onChange={(e) => {
+              setFilterPeriode(e.target.value);
+              loadData(e.target.value);
+            }}
+          >
+            <option value="">Semua Periode</option>
+            {periodes.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nama}{p.statusAktif ? " (Aktif)" : ""}
+              </option>
+            ))}
+          </select>
+          <select 
+            className="form-control w-auto" 
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="SEMUA">Semua Status</option>
+            <option value="MENUNGGU">Menunggu</option>
+            <option value="DITERIMA">Diterima</option>
+            <option value="DITOLAK">Ditolak</option>
+          </select>
+        </div>
       </div>
 
       <div className="card table-wrapper">

@@ -24,6 +24,14 @@ export async function savePeriode(id: string | null, data: { nama: string, tangg
       statusAktif: data.statusAktif
     };
 
+    // Jika diaktifkan, nonaktifkan semua periode lain dulu (hanya 1 yang boleh aktif)
+    if (data.statusAktif) {
+      await prisma.periode.updateMany({
+        where: { id: id ? { not: id } : undefined },
+        data: { statusAktif: false }
+      });
+    }
+
     if (id) {
       await prisma.periode.update({ where: { id }, data: payload });
     } else {
@@ -48,6 +56,13 @@ export async function deletePeriode(id: string) {
 
 export async function toggleStatus(id: string, statusAktif: boolean) {
   try {
+    // Jika diaktifkan, nonaktifkan semua periode lain dulu (hanya 1 yang boleh aktif)
+    if (statusAktif) {
+      await prisma.periode.updateMany({
+        where: { id: { not: id } },
+        data: { statusAktif: false }
+      });
+    }
     await prisma.periode.update({ where: { id }, data: { statusAktif } });
     revalidatePath("/admin/periode");
     return { success: true };

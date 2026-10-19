@@ -7,6 +7,13 @@ import ExportExcelButton from "@/components/ExportExcelButton";
 // This is a Server Component, meaning data fetching is super fast and zero client JS for the rekap logic
 export default async function RekapAbsensiSantri({ searchParams }: { searchParams: Promise<{ programId?: string }> }) {
   const resolvedParams = await searchParams;
+
+  // STRICT: hanya periode aktif
+  const activePeriode = await prisma.periode.findFirst({
+    where: { statusAktif: true },
+    orderBy: { createdAt: 'desc' }
+  });
+
   const programs = await prisma.program.findMany({
     where: { statusAktif: true },
     orderBy: { nama: 'asc' }
@@ -27,7 +34,10 @@ export default async function RekapAbsensiSantri({ searchParams }: { searchParam
           orderBy: { tanggal: 'asc' }
         },
         pendaftarans: {
-          where: { status: "DITERIMA" },
+          where: {
+            status: "DITERIMA",
+            ...(activePeriode ? { periodeId: activePeriode.id } : {})
+          },
           include: { 
             santri: { 
               include: { absensiSantri: true } 
@@ -115,6 +125,11 @@ export default async function RekapAbsensiSantri({ searchParams }: { searchParam
         <div>
           <h1 className="text-2xl font-bold text-white mb-2">Rekap Absensi Santri</h1>
           <p className="text-gray-400">Tampilan harian terperinci sesi program.</p>
+          {activePeriode && (
+            <p className="text-sm text-blue-400 mt-1">
+              📅 Periode aktif: <strong>{activePeriode.nama}</strong>
+            </p>
+          )}
         </div>
         
         <div className="mt-4 md:mt-0 flex flex-wrap gap-2 items-center">

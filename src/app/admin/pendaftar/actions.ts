@@ -5,9 +5,20 @@ import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 
 
-export async function getPendaftaran() {
+export async function getPendaftaran(periodeId?: string) {
   try {
+    // Jika tidak ada filter, default ke periode aktif
+    let filterPeriodeId = periodeId;
+    if (!filterPeriodeId) {
+      const active = await prisma.periode.findFirst({
+        where: { statusAktif: true },
+        orderBy: { createdAt: 'desc' }
+      });
+      if (active) filterPeriodeId = active.id;
+    }
+
     return await prisma.pendaftaran.findMany({
+      where: filterPeriodeId ? { periodeId: filterPeriodeId } : undefined,
       include: {
         periode: true,
         program: true
@@ -16,6 +27,16 @@ export async function getPendaftaran() {
     });
   } catch (error) {
     console.error(error);
+    return [];
+  }
+}
+
+export async function getAllPeriode() {
+  try {
+    return await prisma.periode.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+  } catch {
     return [];
   }
 }
