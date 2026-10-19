@@ -57,9 +57,20 @@ export async function accPendaftaran(id: string) {
       throw new Error("Data tidak valid atau sudah diproses");
     }
 
-    const username = generateUsername(pendaftar.namaLengkap, id);
-    const plainPassword = generatePassword();
-    const hashedPassword = await bcrypt.hash(plainPassword, 10);
+    // Pakai username & password dari form pendaftaran
+    // Fallback ke generate otomatis untuk data lama
+    let username: string;
+    let hashedPassword: string;
+    let plainPassword: string | null = null;
+
+    if ((pendaftar as any).username && (pendaftar as any).passwordHash) {
+      username = (pendaftar as any).username;
+      hashedPassword = (pendaftar as any).passwordHash;
+    } else {
+      username = generateUsername(pendaftar.namaLengkap, id);
+      plainPassword = generatePassword();
+      hashedPassword = await bcrypt.hash(plainPassword, 10);
+    }
 
     let santriRole = await prisma.role.findUnique({ where: { name: 'Santri' } });
     if (!santriRole) {
@@ -96,7 +107,10 @@ export async function accPendaftaran(id: string) {
     });
 
     revalidatePath("/admin/pendaftar");
-    return { success: true, credentials: { username, password: plainPassword } };
+    if (plainPassword) {
+      return { success: true, credentials: { username, password: plainPassword } };
+    }
+    return { success: true, credentials: { username, password: "(sesuai yang didaftarkan)" } };
   } catch (error: any) {
     return { success: false, error: error.message };
   }

@@ -144,7 +144,25 @@ export default function Pendaftaran() {
         </div>
 
         <form onSubmit={handleSubmit} className="card space-y-6">
-          
+
+          <div className="bg-green-900/20 border border-green-800 rounded-lg p-5">
+            <h2 className="text-xl font-semibold text-green-400 mb-4">Akun Login Portal Santri</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="form-group">
+                <label className="form-label">Username <span className="text-red-500">*</span></label>
+                <input type="text" name="username" value={formData.username} onChange={handleChange} required minLength={4} className="form-control" placeholder="Pilih username unik" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Password <span className="text-red-500">*</span></label>
+                <input type="password" name="password" value={formData.password} onChange={handleChange} required minLength={6} className="form-control" placeholder="Minimal 6 karakter" />
+              </div>
+            </div>
+            <p className="text-sm text-yellow-500 mt-2">Ingat sandi baik-baik untuk login di portal santri.</p>
+            <p className="text-sm text-gray-400 mt-2">
+              Sudah punya akun? <Link href="/santri/login" className="text-blue-400 hover:underline font-semibold">Login di sini</Link>
+            </p>
+          </div>
+
           <div className="border-b border-gray-800 pb-4 mb-4">
             <h2 className="text-xl font-semibold text-blue-400">Pilih Program & Periode</h2>
           </div>
@@ -223,25 +241,6 @@ export default function Pendaftaran() {
             <input type="tel" name="noWa" value={formData.noWa} onChange={handleChange} required className="form-control" placeholder="Contoh: 08123456789" />
             <p className="text-xs text-gray-500 mt-1">Bisa diawali +62, 08, atau 62 — otomatis disesuaikan.</p>
           </div>
-
-          <div className="border-b border-gray-800 pb-4 mb-4 mt-8">
-            <h2 className="text-xl font-semibold text-blue-400">Akun Login Portal Santri</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="form-group">
-              <label className="form-label">Username <span className="text-red-500">*</span></label>
-              <input type="text" name="username" value={formData.username} onChange={handleChange} required minLength={4} className="form-control" placeholder="Pilih username unik" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Password <span className="text-red-500">*</span></label>
-              <input type="password" name="password" value={formData.password} onChange={handleChange} required minLength={6} className="form-control" placeholder="Minimal 6 karakter" />
-            </div>
-          </div>
-          <p className="text-sm text-yellow-500 -mt-2">Ingat sandi baik-baik untuk login di portal santri.</p>
-          <p className="text-sm text-gray-400 mt-2">
-            Sudah punya akun? <Link href="/santri/login" className="text-blue-400 hover:underline font-semibold">Login di sini</Link>
-          </p>
 
           <div className="border-b border-gray-800 pb-4 mb-4 mt-8">
             <h2 className="text-xl font-semibold text-blue-400">Alamat Lengkap</h2>
