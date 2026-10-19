@@ -12,17 +12,25 @@ export function normalizeNoWa(input: string): string {
   return cleaned;
 }
 
+/**
+ * Kirim pesan WA via gateway Amtsilati Pusat
+ * Format: POST /api/v1/sessions/{sessionId}/send
+ * Headers: Authorization Bearer + x-api-key
+ * To: 628xxx@s.whatsapp.net
+ */
 export async function sendWa(to: string, message: string): Promise<{ success: boolean; detail?: string }> {
   try {
     const normalizedTo = normalizeNoWa(to);
+    const toJid = `${normalizedTo}@s.whatsapp.net`;
     const res = await fetch(`${WA_API_URL}/sessions/${WA_SESSION_ID}/send`, {
       method: "POST",
       headers: {
-        "X-API-Key": WA_API_KEY,
+        "Authorization": `Bearer ${WA_API_KEY}`,
+        "x-api-key": WA_API_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        to: normalizedTo,
+        to: toJid,
         message: message,
       }),
     });
