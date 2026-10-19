@@ -33,6 +33,8 @@ export default function Pendaftaran() {
     detailAlamat: "",
     periodeId: "",
     programId: "",
+    username: "",
+    password: "",
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -47,7 +49,13 @@ export default function Pendaftaran() {
       } catch (e) {}
     }
 
-    fetch("/api/pendaftaran/periode").then(r => r.json()).then(setPeriodes);
+    fetch("/api/pendaftaran/periode").then(r => r.json()).then(data => {
+      setPeriodes(data);
+      // Auto-pilih periode jika hanya ada satu (statis)
+      if (Array.isArray(data) && data.length === 1) {
+        setFormData(prev => ({ ...prev, periodeId: data[0].id }));
+      }
+    });
     fetch("/api/pendaftaran/program").then(r => r.json()).then(data => {
       // Pastikan ada data dan array valid
       if (Array.isArray(data)) setPrograms(data);
@@ -104,7 +112,8 @@ export default function Pendaftaran() {
               <p>Total tagihan: <b class="text-xl text-blue-500">Rp ${data.data.totalBiaya.toLocaleString('id-ID')}</b></p>
               <p class="text-sm text-yellow-500">Penting: Transfer nominal HINGGA 3 DIGIT TERAKHIR sesuai total di atas agar validasi cepat.</p>
               <br/>
-              <p>Akun santri Anda akan digenerate otomatis setelah admin memvalidasi pembayaran Anda.</p>
+              <p>Detail pembayaran juga telah dikirim ke WhatsApp Anda.</p>
+              <p class="text-sm text-gray-400 mt-2">Gunakan username dan password yang Anda buat untuk login di portal santri setelah pembayaran divalidasi admin.</p>
             </div>
           `,
           confirmButtonText: 'Kembali Ke Beranda',
@@ -143,12 +152,19 @@ export default function Pendaftaran() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="form-group">
               <label className="form-label">Periode Pendaftaran <span className="text-red-500">*</span></label>
-              <select name="periodeId" value={formData.periodeId} onChange={handleChange} required className="form-control">
-                <option value="">-- Pilih Periode Aktif --</option>
-                {periodes.map(p => (
-                  <option key={p.id} value={p.id}>{p.nama}</option>
-                ))}
-              </select>
+              {periodes.length === 1 ? (
+                <div className="form-control bg-gray-800/50 flex items-center font-semibold text-green-400">
+                  {periodes[0].nama}
+                  <input type="hidden" name="periodeId" value={periodes[0].id} />
+                </div>
+              ) : (
+                <select name="periodeId" value={formData.periodeId} onChange={handleChange} required className="form-control">
+                  <option value="">-- Pilih Periode Aktif --</option>
+                  {periodes.map(p => (
+                    <option key={p.id} value={p.id}>{p.nama}</option>
+                  ))}
+                </select>
+              )}
             </div>
             <div className="form-group">
               <label className="form-label">Program <span className="text-red-500">*</span></label>
@@ -205,7 +221,27 @@ export default function Pendaftaran() {
           <div className="form-group">
             <label className="form-label">No. WhatsApp <span className="text-red-500">*</span></label>
             <input type="tel" name="noWa" value={formData.noWa} onChange={handleChange} required className="form-control" placeholder="Contoh: 08123456789" />
+            <p className="text-xs text-gray-500 mt-1">Bisa diawali +62, 08, atau 62 — otomatis disesuaikan.</p>
           </div>
+
+          <div className="border-b border-gray-800 pb-4 mb-4 mt-8">
+            <h2 className="text-xl font-semibold text-blue-400">Akun Login Portal Santri</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="form-group">
+              <label className="form-label">Username <span className="text-red-500">*</span></label>
+              <input type="text" name="username" value={formData.username} onChange={handleChange} required minLength={4} className="form-control" placeholder="Pilih username unik" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Password <span className="text-red-500">*</span></label>
+              <input type="password" name="password" value={formData.password} onChange={handleChange} required minLength={6} className="form-control" placeholder="Minimal 6 karakter" />
+            </div>
+          </div>
+          <p className="text-sm text-yellow-500 -mt-2">Ingat sandi baik-baik untuk login di portal santri.</p>
+          <p className="text-sm text-gray-400 mt-2">
+            Sudah punya akun? <Link href="/santri/login" className="text-blue-400 hover:underline font-semibold">Login di sini</Link>
+          </p>
 
           <div className="border-b border-gray-800 pb-4 mb-4 mt-8">
             <h2 className="text-xl font-semibold text-blue-400">Alamat Lengkap</h2>

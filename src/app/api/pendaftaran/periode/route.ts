@@ -5,9 +5,12 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    // WIB timezone
+    const now = new Date();
     const periodes = await prisma.periode.findMany({
       where: {
-        statusAktif: true
+        tanggalBuka: { lte: now },
+        tanggalTutup: { gte: now }
       },
       orderBy: {
         tanggalBuka: 'desc'

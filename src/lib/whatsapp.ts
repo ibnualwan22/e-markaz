@@ -1,0 +1,77 @@
+const WA_API_URL = process.env.WA_GATEWAY_URL || "";
+const WA_API_KEY = process.env.WA_API_KEY || "";
+const WA_SESSION_ID = process.env.WA_SESSION_ID || "2";
+
+export function normalizeNoWa(input: string): string {
+  let cleaned = input.replace(/[^0-9]/g, "");
+  if (cleaned.startsWith("0")) {
+    cleaned = "62" + cleaned.substring(1);
+  } else if (cleaned.startsWith("8")) {
+    cleaned = "62" + cleaned;
+  }
+  return cleaned;
+}
+
+export async function sendWa(to: string, message: string): Promise<{ success: boolean; detail?: string }> {
+  try {
+    const normalizedTo = normalizeNoWa(to);
+    const res = await fetch(`${WA_API_URL}/sessions/${WA_SESSION_ID}/send`, {
+      method: "POST",
+      headers: {
+        "X-API-Key": WA_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to: normalizedTo,
+        message: message,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      return { success: true };
+    }
+    return { success: false, detail: data.message || data.error || `HTTP ${res.status}` };
+  } catch (error: any) {
+    return { success: false, detail: error.message || "Network error" };
+  }
+}
+
+export function formatPesanPendaftaran(
+  nama: string,
+  programNama: string,
+  periodeNama: string,
+  totalBiaya: number,
+  kodeUnik: number,
+  username: string
+): string {
+  const totalFormatted = totalBiaya.toLocaleString("id-ID");
+  const lines = [
+    "Assalamu'alaikum warahmatullahi wabarakatuh,",
+    "",
+    "Jazakumullah khairan atas pendaftaran Anda di *E-Markaz*.",
+    "",
+    "Berikut detail pendaftaran Anda:",
+    "",
+    "Nama: " + nama,
+    "Program: " + programNama,
+    "Periode: " + periodeNama,
+    "Username: " + username,
+    "",
+    "*Rincian Biaya:*",
+    "Total yang harus dibayarkan: Rp " + totalFormatted,
+    "(termasuk kode unik Rp " + kodeUnik + ")",
+    "",
+    "Silakan transfer ke rekening berikut:",
+    "Bank BSI: 1234567890",
+    "a.n. Markaz Arabiyah",
+    "(Dummy - untuk testing)",
+    "",
+    "Setelah melakukan pembayaran, mohon konfirmasi ke admin.",
+    "",
+    "Simpan username dan password Anda baik-baik untuk login di portal santri.",
+    "",
+    "Wassalamu'alaikum warahmatullahi wabarakatuh.",
+    "Admin E-Markaz"
+  ];
+  return lines.join("\n");
+}
