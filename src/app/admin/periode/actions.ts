@@ -70,3 +70,36 @@ export async function toggleStatus(id: string, statusAktif: boolean) {
     return { success: false, error: error.message };
   }
 }
+
+export async function cleanupDuplicateActive() {
+  try {
+    // Cari semua periode aktif, urutkan terbaru dulu
+    const actives = await prisma.periode.findMany({
+      where: { statusAktif: true },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    if (actives.length <= 1) {
+      return { success: true, message: "Sudah hanya 1 yang aktif", cleaned: 0 };
+    }
+
+    // Pertahankan yang terbaru, nonaktifkan sisanya
+    const keepId = actives[0].id;
+    const result = await prisma.periode.updateMany({
+      where: {
+        id: { not: keepId },
+        statusAktif: true
+      },
+      data: { statusAktif: false }
+    });
+
+    revalidatePath("/admin/periode");
+    return {
+      success: true,
+      message: `Berhasil. Periode "${actives[0].nama}" tetap aktif, ${result.count} lainnya dinonaktifkan.`,
+      cleaned: result.count
+    };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

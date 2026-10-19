@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Alert, Toast } from "@/lib/swal";
-import { getPeriodes, savePeriode, deletePeriode, toggleStatus } from "./actions";
-import { FaEdit, FaTrash, FaPlus, FaCheck, FaTimes } from "react-icons/fa";
+import { getPeriodes, savePeriode, deletePeriode, toggleStatus, cleanupDuplicateActive } from "./actions";
+import { FaEdit, FaTrash, FaPlus, FaCheck, FaTimes, FaPowerOff, FaBroom } from "react-icons/fa";
 
 export default function ManajemenPeriode() {
   const [data, setData] = useState<any[]>([]);
@@ -76,13 +76,37 @@ export default function ManajemenPeriode() {
     }
   };
 
+  const handleCleanup = async () => {
+    const confirm = await Alert.fire({
+      title: 'Bereskan duplikat?',
+      text: 'Hanya periode terbaru yang akan tetap aktif, sisanya dinonaktifkan.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, bereskan'
+    });
+    if (confirm.isConfirmed) {
+      const res = await cleanupDuplicateActive();
+      if (res.success) {
+        Toast.fire({ icon: 'success', title: res.message || 'Beres!' });
+        loadData();
+      } else {
+        Alert.fire('Gagal', res.error, 'error');
+      }
+    }
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-white">Manajemen Periode</h1>
-        <button onClick={() => openModal()} className="btn btn-primary">
-          <FaPlus /> Tambah Periode
-        </button>
+        <div className="flex gap-2">
+          <button onClick={handleCleanup} className="btn btn-secondary flex items-center gap-2" title="Nonaktifkan semua kecuali yang terbaru">
+            <FaBroom /> Bereskan Duplikat
+          </button>
+          <button onClick={() => openModal()} className="btn btn-primary">
+            <FaPlus /> Tambah Periode
+          </button>
+        </div>
       </div>
 
       <div className="card table-wrapper">
@@ -107,16 +131,31 @@ export default function ManajemenPeriode() {
                 <td>{new Date(item.tanggalBuka).toLocaleDateString('id-ID')}</td>
                 <td>{new Date(item.tanggalTutup).toLocaleDateString('id-ID')}</td>
                 <td>
-                  <button onClick={() => handleToggle(item.id, item.statusAktif)} className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${item.statusAktif ? 'bg-green-500/20 text-green-500' : 'bg-gray-500/20 text-gray-400'}`}>
+                  <button
+                    onClick={() => handleToggle(item.id, item.statusAktif)}
+                    title="Klik untuk mengubah status"
+                    className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold cursor-pointer hover:opacity-80 transition-opacity ${item.statusAktif ? 'bg-green-500/20 text-green-500 hover:bg-green-500/30' : 'bg-gray-500/20 text-gray-400 hover:bg-gray-500/30'}`}
+                  >
                     {item.statusAktif ? <><FaCheck /> Aktif</> : <><FaTimes /> Nonaktif</>}
                   </button>
                 </td>
                 <td>
                   <div className="flex gap-2">
-                    <button onClick={() => openModal(item)} className="p-2 text-blue-400 hover:bg-blue-400/10 rounded">
+                    <button
+                      onClick={() => handleToggle(item.id, item.statusAktif)}
+                      title={item.statusAktif ? "Nonaktifkan periode" : "Aktifkan periode"}
+                      className={`p-2 rounded transition-colors ${
+                        item.statusAktif
+                          ? 'text-green-400 hover:bg-green-400/10 border border-green-400/30'
+                          : 'text-gray-400 hover:bg-gray-400/10 border border-gray-400/20'
+                      }`}
+                    >
+                      <FaPowerOff />
+                    </button>
+                    <button onClick={() => openModal(item)} className="p-2 text-blue-400 hover:bg-blue-400/10 rounded" title="Edit">
                       <FaEdit />
                     </button>
-                    <button onClick={() => handleDelete(item.id)} className="p-2 text-red-400 hover:bg-red-400/10 rounded">
+                    <button onClick={() => handleDelete(item.id)} className="p-2 text-red-400 hover:bg-red-400/10 rounded" title="Hapus">
                       <FaTrash />
                     </button>
                   </div>
