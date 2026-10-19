@@ -80,10 +80,15 @@ export async function accPendaftaran(id: string) {
         }
       });
 
+      const masaBerlaku = new Date();
+      masaBerlaku.setMonth(masaBerlaku.getMonth() + 1);
+
       const santri = await tx.santri.create({
         data: {
           userId: user.id,
-          pendaftaranId: id
+          pendaftaranId: id,
+          isActive: true,
+          masaBerlaku
         }
       });
 

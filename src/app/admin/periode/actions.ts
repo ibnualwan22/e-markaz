@@ -62,6 +62,10 @@ export async function toggleStatus(id: string, statusAktif: boolean) {
         where: { id: { not: id } },
         data: { statusAktif: false }
       });
+      await prisma.santri.updateMany({
+        where: { isActive: true, pendaftaran: { periodeId: { not: id } } },
+        data: { isActive: false }
+      });
     }
     await prisma.periode.update({ where: { id }, data: { statusAktif } });
     revalidatePath("/admin/periode");

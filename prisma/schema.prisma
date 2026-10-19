@@ -114,6 +114,9 @@ model Santri {
   pendaftaranId String          @unique
   pendaftaran   Pendaftaran     @relation(fields: [pendaftaranId], references: [id])
 
+  isActive      Boolean         @default(true)
+  masaBerlaku   DateTime?
+
   absensiSantri AbsensiSantri[]
   
   createdAt DateTime @default(now())

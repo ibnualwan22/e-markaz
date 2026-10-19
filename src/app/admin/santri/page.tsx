@@ -248,13 +248,15 @@ export default function DataSantri() {
               <th>Nama / Gender</th>
               <th>Program Terakhir</th>
               <th>Username</th>
+              <th>Status</th>
+              <th>Masa Berlaku</th>
               <th>Waktu Bergabung</th>
               <th>Aksi</th>
             </tr>
           </thead>
           <tbody>
             {data.length === 0 ? (
-              <tr><td colSpan={6} className="text-center">Belum ada data santri</td></tr>
+              <tr><td colSpan={8} className="text-center">Belum ada data santri</td></tr>
             ) : data.map((item, index) => (
               <tr key={item.id}>
                 <td>{index + 1}</td>
@@ -268,6 +270,16 @@ export default function DataSantri() {
                 </td>
                 <td>
                   <span className="badge badge-success lowercase">{item.user?.username}</span>
+                </td>
+                <td>
+                  {item.isActive ? (
+                    <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400">Aktif</span>
+                  ) : (
+                    <span className="px-2 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400">Kedaluwarsa</span>
+                  )}
+                </td>
+                <td className="text-sm">
+                  {item.masaBerlaku ? new Date(item.masaBerlaku).toLocaleDateString('id-ID') : '-'}
                 </td>
                 <td className="text-sm">
                   {new Date(item.createdAt).toLocaleDateString('id-ID')}
