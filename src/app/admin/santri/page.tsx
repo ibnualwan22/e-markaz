@@ -16,28 +16,22 @@ export default function DataSantri() {
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Filter & pencarian
+  // Filter & pencarian (default: hanya santri AKTIF, seperti PPDB)
   const [searchQuery, setSearchQuery] = useState("");
   const [filterProgramId, setFilterProgramId] = useState("");
   const [filterPeriodeId, setFilterPeriodeId] = useState("");
+  const [filterStatus, setFilterStatus] = useState("AKTIF");
 
   const filteredData = data.filter((item) => {
     const matchSearch = !searchQuery || item.pendaftaran?.namaLengkap?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchProgram = !filterProgramId || item.pendaftaran?.program?.id === filterProgramId;
     const matchPeriode = !filterPeriodeId || item.pendaftaran?.periode?.id === filterPeriodeId;
-    return matchSearch && matchProgram && matchPeriode;
+    const matchStatus =
+      filterStatus === "SEMUA" ? true :
+      filterStatus === "AKTIF" ? item.isActive === true :
+      item.isActive !== true;
+    return matchSearch && matchProgram && matchPeriode && matchStatus;
   });
-
-  const hitungSisaDurasi = (masaBerlaku: any) => {
-    if (!masaBerlaku) return { teks: "-", warna: "text-gray-400" };
-    const sekarang = new Date();
-    const berlaku = new Date(masaBerlaku);
-    const selisihHari = Math.ceil((berlaku.getTime() - sekarang.getTime()) / (1000 * 60 * 60 * 24));
-    if (selisihHari < 0) return { teks: `Habis ${Math.abs(selisihHari)} hari lalu`, warna: "text-red-400" };
-    if (selisihHari === 0) return { teks: "Habis hari ini", warna: "text-yellow-400" };
-    if (selisihHari <= 7) return { teks: `${selisihHari} hari lagi`, warna: "text-yellow-400" };
-    return { teks: `${selisihHari} hari lagi`, warna: "text-green-400" };
-  };
 
   const loadData = async () => {
     const res = await getSantriGlobal();
@@ -231,7 +225,7 @@ export default function DataSantri() {
       </div>
 
       <div className="card p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="form-group mb-0">
             <label className="form-label">Cari Nama</label>
             <input
@@ -256,11 +250,19 @@ export default function DataSantri() {
               {periodes.map(p => <option key={p.id} value={p.id}>{p.nama}</option>)}
             </select>
           </div>
+          <div className="form-group mb-0">
+            <label className="form-label">Status Santri</label>
+            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="form-control">
+              <option value="AKTIF">Aktif</option>
+              <option value="NONAKTIF">Tidak Aktif / Kadaluarsa</option>
+              <option value="SEMUA">Semua</option>
+            </select>
+          </div>
         </div>
-        {(searchQuery || filterProgramId || filterPeriodeId) && (
+        {(searchQuery || filterProgramId || filterPeriodeId || filterStatus !== "AKTIF") && (
           <div className="mt-3">
             <button
-              onClick={() => { setSearchQuery(""); setFilterProgramId(""); setFilterPeriodeId(""); }}
+              onClick={() => { setSearchQuery(""); setFilterProgramId(""); setFilterPeriodeId(""); setFilterStatus("AKTIF"); }}
               className="text-sm text-blue-400 hover:underline"
             >
               Reset filter
@@ -312,14 +314,13 @@ export default function DataSantri() {
               <th>Program Terakhir</th>
               <th>Username</th>
               <th>Status</th>
-              <th>Masa Berlaku / Durasi</th>
               <th>Waktu Bergabung</th>
               <th>Aksi</th>
             </tr>
           </thead>
           <tbody>
             {filteredData.length === 0 ? (
-              <tr><td colSpan={8} className="text-center">Belum ada data santri</td></tr>
+              <tr><td colSpan={7} className="text-center">Belum ada data santri</td></tr>
             ) : filteredData.map((item, index) => (
               <tr key={item.id}>
                 <td>{index + 1}</td>
@@ -340,17 +341,6 @@ export default function DataSantri() {
                   ) : (
                     <span className="px-2 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400">Kedaluwarsa</span>
                   )}
-                </td>
-                <td className="text-sm">
-                  {(() => {
-                    const sisa = hitungSisaDurasi(item.masaBerlaku);
-                    return (
-                      <>
-                        <div>{item.masaBerlaku ? new Date(item.masaBerlaku).toLocaleDateString('id-ID') : '-'}</div>
-                        <div className={`text-xs mt-1 ${sisa.warna}`}>{sisa.teks}</div>
-                      </>
-                    );
-                  })()}
                 </td>
                 <td className="text-sm">
                   {new Date(item.createdAt).toLocaleDateString('id-ID')}
