@@ -10,6 +10,7 @@ datasource db {
 model User {
   id              String            @id @default(cuid())
   username        String            @unique
+  namaLengkap     String?
   password        String
   roleId          String
   role            Role              @relation(fields: [roleId], references: [id])

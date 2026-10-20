@@ -314,13 +314,14 @@ export default function DataSantri() {
               <th>Program Terakhir</th>
               <th>Username</th>
               <th>Status</th>
+              <th>Durasi</th>
               <th>Waktu Bergabung</th>
               <th>Aksi</th>
             </tr>
           </thead>
           <tbody>
             {filteredData.length === 0 ? (
-              <tr><td colSpan={7} className="text-center">Belum ada data santri</td></tr>
+              <tr><td colSpan={8} className="text-center">Belum ada data santri</td></tr>
             ) : filteredData.map((item, index) => (
               <tr key={item.id}>
                 <td>{index + 1}</td>
@@ -341,6 +342,9 @@ export default function DataSantri() {
                   ) : (
                     <span className="px-2 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400">Kedaluwarsa</span>
                   )}
+                </td>
+                <td className="text-sm">
+                  {item.pendaftaran?.program?.durasiBulan ? `${item.pendaftaran.program.durasiBulan} bulan` : "-"}
                 </td>
                 <td className="text-sm">
                   {new Date(item.createdAt).toLocaleDateString('id-ID')}
