@@ -16,6 +16,29 @@ export default function DataSantri() {
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Filter & pencarian
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterProgramId, setFilterProgramId] = useState("");
+  const [filterPeriodeId, setFilterPeriodeId] = useState("");
+
+  const filteredData = data.filter((item) => {
+    const matchSearch = !searchQuery || item.pendaftaran?.namaLengkap?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchProgram = !filterProgramId || item.pendaftaran?.program?.id === filterProgramId;
+    const matchPeriode = !filterPeriodeId || item.pendaftaran?.periode?.id === filterPeriodeId;
+    return matchSearch && matchProgram && matchPeriode;
+  });
+
+  const hitungSisaDurasi = (masaBerlaku: any) => {
+    if (!masaBerlaku) return { teks: "-", warna: "text-gray-400" };
+    const sekarang = new Date();
+    const berlaku = new Date(masaBerlaku);
+    const selisihHari = Math.ceil((berlaku.getTime() - sekarang.getTime()) / (1000 * 60 * 60 * 24));
+    if (selisihHari < 0) return { teks: `Habis ${Math.abs(selisihHari)} hari lalu`, warna: "text-red-400" };
+    if (selisihHari === 0) return { teks: "Habis hari ini", warna: "text-yellow-400" };
+    if (selisihHari <= 7) return { teks: `${selisihHari} hari lagi`, warna: "text-yellow-400" };
+    return { teks: `${selisihHari} hari lagi`, warna: "text-green-400" };
+  };
+
   const loadData = async () => {
     const res = await getSantriGlobal();
     setData(res);
@@ -195,6 +218,7 @@ export default function DataSantri() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-border pb-4 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Data Santri Global</h1>
+          <p className="text-sm text-gray-400 mt-1">Total: {filteredData.length} dari {data.length} santri</p>
         </div>
         <div className="flex gap-2">
           <button onClick={onDownloadTemplate} className="btn bg-gray-700 hover:bg-gray-600 flex items-center gap-2">
@@ -204,6 +228,45 @@ export default function DataSantri() {
             <FaFileExcel /> Import Santri
           </button>
         </div>
+      </div>
+
+      <div className="card p-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="form-group mb-0">
+            <label className="form-label">Cari Nama</label>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Ketik nama santri..."
+              className="form-control"
+            />
+          </div>
+          <div className="form-group mb-0">
+            <label className="form-label">Filter Program</label>
+            <select value={filterProgramId} onChange={e => setFilterProgramId(e.target.value)} className="form-control">
+              <option value="">-- Semua Program --</option>
+              {programs.map(p => <option key={p.id} value={p.id}>{p.nama}</option>)}
+            </select>
+          </div>
+          <div className="form-group mb-0">
+            <label className="form-label">Filter Periode</label>
+            <select value={filterPeriodeId} onChange={e => setFilterPeriodeId(e.target.value)} className="form-control">
+              <option value="">-- Semua Periode --</option>
+              {periodes.map(p => <option key={p.id} value={p.id}>{p.nama}</option>)}
+            </select>
+          </div>
+        </div>
+        {(searchQuery || filterProgramId || filterPeriodeId) && (
+          <div className="mt-3">
+            <button
+              onClick={() => { setSearchQuery(""); setFilterProgramId(""); setFilterPeriodeId(""); }}
+              className="text-sm text-blue-400 hover:underline"
+            >
+              Reset filter
+            </button>
+          </div>
+        )}
       </div>
 
       {showImportModal && (
@@ -249,15 +312,15 @@ export default function DataSantri() {
               <th>Program Terakhir</th>
               <th>Username</th>
               <th>Status</th>
-              <th>Masa Berlaku</th>
+              <th>Masa Berlaku / Durasi</th>
               <th>Waktu Bergabung</th>
               <th>Aksi</th>
             </tr>
           </thead>
           <tbody>
-            {data.length === 0 ? (
+            {filteredData.length === 0 ? (
               <tr><td colSpan={8} className="text-center">Belum ada data santri</td></tr>
-            ) : data.map((item, index) => (
+            ) : filteredData.map((item, index) => (
               <tr key={item.id}>
                 <td>{index + 1}</td>
                 <td>
@@ -279,7 +342,15 @@ export default function DataSantri() {
                   )}
                 </td>
                 <td className="text-sm">
-                  {item.masaBerlaku ? new Date(item.masaBerlaku).toLocaleDateString('id-ID') : '-'}
+                  {(() => {
+                    const sisa = hitungSisaDurasi(item.masaBerlaku);
+                    return (
+                      <>
+                        <div>{item.masaBerlaku ? new Date(item.masaBerlaku).toLocaleDateString('id-ID') : '-'}</div>
+                        <div className={`text-xs mt-1 ${sisa.warna}`}>{sisa.teks}</div>
+                      </>
+                    );
+                  })()}
                 </td>
                 <td className="text-sm">
                   {new Date(item.createdAt).toLocaleDateString('id-ID')}
