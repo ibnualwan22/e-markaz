@@ -15,7 +15,7 @@ export default function Home() {
           <Link href="/pendaftaran" className="btn btn-primary">
             Daftar Sekarang
           </Link>
-          <Link href="/login" className="btn btn-secondary">
+          <Link href="/santri/login" className="btn btn-secondary">
             Login Portal Santri
           </Link>
         </div>
