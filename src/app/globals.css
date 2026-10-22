@@ -6,6 +6,9 @@
   body {
     @apply bg-background text-gray-200 antialiased;
   }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
 }
 
 @layer components {
@@ -13,7 +16,7 @@
   .card {
     @apply bg-surface border border-border rounded-xl p-4 md:p-6 shadow-lg shadow-black/50 transition-all duration-300;
   }
-  .card:hover {
+  a.card:hover, button.card:hover, .card-interactive:hover {
     @apply border-gray-700 shadow-black/60;
   }
 
@@ -29,10 +32,20 @@
   .form-control {
     @apply w-full bg-surface-hover border border-border text-white rounded-lg px-4 py-2.5 outline-none transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary placeholder-gray-600;
   }
-  
+  .form-control-error {
+    @apply border-red-500/70 focus:border-red-500 focus:ring-red-500;
+  }
+
   /* Buttons */
   .btn {
-    @apply inline-flex justify-center items-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0;
+    @apply inline-flex justify-center items-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
   }
   .btn-primary {
     @apply bg-primary hover:bg-blue-600 text-white shadow-lg shadow-primary/20;
@@ -63,10 +76,10 @@
     @apply w-full text-left border-collapse;
   }
   th {
-    @apply bg-surface-hover/50 text-gray-400 font-semibold text-sm px-4 py-4 uppercase tracking-wider border-b border-border whitespace-nowrap;
+    @apply bg-surface-hover/50 text-gray-400 font-semibold text-sm px-4 py-4 border-b border-border whitespace-nowrap;
   }
   td {
-    @apply px-4 py-4 border-b border-border/50 align-middle whitespace-nowrap;
+    @apply px-4 py-4 border-b border-border/50 align-middle whitespace-nowrap tabular-nums;
   }
   tbody tr {
     @apply transition-colors hover:bg-surface-hover/30;

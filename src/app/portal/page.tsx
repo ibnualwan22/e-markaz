@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { FaGraduationCap, FaCalendarCheck, FaBook } from "react-icons/fa";
+import { FaGraduationCap, FaCalendarCheck, FaBook, FaWhatsapp, FaUserTimes } from "react-icons/fa";
 import Link from "next/link";
 
 
@@ -23,7 +23,32 @@ export default async function PortalDashboard() {
     }
   });
 
-  if (!santriData) return <div>Data santri tidak ditemukan</div>;
+  if (!santriData) {
+    return (
+      <div className="card mx-auto max-w-xl p-8 text-center">
+        <div className="mx-auto mb-4 w-fit rounded-full bg-primary/10 p-4 text-3xl text-primary">
+          <FaUserTimes />
+        </div>
+        <h1 className="mb-2 text-2xl font-bold text-white">Data Santri Belum Tersedia</h1>
+        <p className="mb-6 leading-relaxed text-gray-400">
+          Akun Anda belum terhubung ke data pendaftaran, atau pendaftaran Anda masih diproses
+          admin. Jika Anda sudah mendaftar dan membayar, silakan hubungi admin agar akun Anda
+          segera diaktifkan.
+        </p>
+        <a
+          href={`https://wa.me/628980837788?text=${encodeURIComponent("Assalamu'alaikum, akun portal santri saya belum menampilkan data pendaftaran. Mohon dibantu.")}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-primary inline-flex items-center gap-2"
+        >
+          <FaWhatsapp /> Hubungi Admin via WhatsApp
+        </a>
+        <p className="mt-4 text-sm text-gray-500">
+          <Link href="/" className="text-primary hover:text-white">Kembali ke beranda</Link>
+        </p>
+      </div>
+    );
+  }
 
   const totalSesi = await prisma.sesiAbsensi.count({
     where: { programId: santriData.pendaftaran.programId }
@@ -66,37 +91,43 @@ export default async function PortalDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         
-        <div className="card border-blue-500/20 bg-gradient-to-br from-surface to-blue-900/10 p-6 flex flex-col justify-between">
+        <div className="card p-6 flex flex-col justify-between">
           <div>
-            <div className="flex items-center gap-3 mb-4 text-blue-400">
+            <div className="flex items-center gap-3 mb-4 text-primary">
               <FaGraduationCap className="text-2xl" />
-              <h3 className="font-semibold text-lg uppercase tracking-wider">Program Aktif</h3>
+              <h3 className="font-semibold text-lg">Program Aktif</h3>
             </div>
             <p className="text-3xl font-bold text-white mb-2">{santriData.pendaftaran.program.nama}</p>
             <p className="text-gray-400">{santriData.pendaftaran.periode.nama}</p>
           </div>
-          <div className="mt-6 pt-4 border-t border-blue-500/20">
-             <Link href="/portal/materi" className="text-sm font-semibold text-blue-400 hover:text-white transition-colors">Lihat modul & materi PDF &rarr;</Link>
+          <div className="mt-6 pt-4 border-t border-border">
+             <Link href="/portal/materi" className="text-sm font-semibold text-primary hover:text-white transition-colors">Lihat modul & materi PDF &rarr;</Link>
           </div>
         </div>
         
         <div className="grid grid-rows-2 gap-6">
-           <div className="card bg-surface-hover/50 p-5 flex items-center justify-between border-green-500/20">
+           <div className="card bg-surface-hover/50 p-5 flex items-center justify-between">
              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-500/10 text-green-500 rounded-lg text-xl"><FaCalendarCheck /></div>
+                <div className="p-3 bg-primary/10 text-primary rounded-lg text-xl"><FaCalendarCheck /></div>
                 <div>
                    <h4 className="text-gray-400 text-sm font-medium">Kehadiran Anda</h4>
                    <p className="text-xl font-bold text-white">{totalHadir} <span className="text-sm text-gray-500 font-normal">dari {totalSesi} sesi</span></p>
+                   {totalSesi === 0 && (
+                     <p className="text-xs text-gray-500 mt-1">Belum ada sesi yang berjalan untuk program ini.</p>
+                   )}
                 </div>
              </div>
            </div>
            
-           <div className="card bg-surface-hover/50 p-5 flex items-center justify-between border-purple-500/20">
+           <div className="card bg-surface-hover/50 p-5 flex items-center justify-between">
              <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-500/10 text-purple-500 rounded-lg text-xl"><FaBook /></div>
+                <div className="p-3 bg-primary/10 text-primary rounded-lg text-xl"><FaBook /></div>
                 <div>
                    <h4 className="text-gray-400 text-sm font-medium">Materi Tersedia</h4>
                    <p className="text-xl font-bold text-white">{totalMateri} <span className="text-sm text-gray-500 font-normal">dokumen PDF</span></p>
+                   {totalMateri === 0 && (
+                     <p className="text-xs text-gray-500 mt-1">Pengajar belum mengunggah materi. Silakan cek lagi nanti.</p>
+                   )}
                 </div>
              </div>
            </div>
