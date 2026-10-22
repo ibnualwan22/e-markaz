@@ -50,11 +50,11 @@ export default async function PortalDashboard() {
           </p>
           <div className="bg-black/30 rounded-lg p-4 mb-4">
             <p className="text-sm text-gray-400">Transfer ke:</p>
-            <p className="font-semibold text-white">Bank BSI: 1234567890</p>
-            <p className="text-sm text-gray-400">a.n. Markaz Arabiyah (Dummy)</p>
+            <p className="font-semibold text-white">Bank BRI: 0555-0100-1126-567</p>
+            <p className="text-sm text-gray-400">a.n. Markaz Arabiyah</p>
           </div>
           <a
-            href={`https://wa.me/6281234567890?text=${encodeURIComponent(`Assalamu'alaikum, saya ${santriData.pendaftaran.namaLengkap} sudah melakukan pembayaran pendaftaran sebesar Rp ${santriData.pendaftaran.totalBiaya.toLocaleString('id-ID')} untuk program ${santriData.pendaftaran.program.nama}. Mohon konfirmasi.`)}`}
+            href={`https://wa.me/628980837788?text=${encodeURIComponent(`Assalamu'alaikum, saya ${santriData.pendaftaran.namaLengkap} sudah melakukan pembayaran pendaftaran sebesar Rp ${santriData.pendaftaran.totalBiaya.toLocaleString('id-ID')} untuk program ${santriData.pendaftaran.program.nama}. Mohon konfirmasi.`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-primary inline-flex items-center gap-2"

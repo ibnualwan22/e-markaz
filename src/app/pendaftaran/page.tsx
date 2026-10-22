@@ -107,7 +107,7 @@ export default function Pendaftaran() {
           title: 'Pendaftaran Berhasil!',
           html: `
             <div class="text-left mt-4 border-t border-gray-700 pt-4">
-              <p>Mohon segera lakukan pembayaran ke Rekening BSI no: <b>1234567890</b></p>
+              <p>Mohon segera lakukan pembayaran ke Rekening BRI no: <b>0555-0100-1126-567</b> a.n. Markaz Arabiyah</p>
               <br/>
               <p>Total tagihan: <b class="text-xl text-blue-500">Rp ${data.data.totalBiaya.toLocaleString('id-ID')}</b></p>
               <p class="text-sm text-yellow-500">Penting: Transfer nominal HINGGA 3 DIGIT TERAKHIR sesuai total di atas agar validasi cepat.</p>
