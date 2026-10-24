@@ -8,7 +8,7 @@ import { Alert } from "@/lib/swal";
 import { useNavigationLoader } from "./NavigationLoader";
 import { 
   FaHome, FaCalendarAlt, FaBookOpen, FaUserGraduate, 
-  FaUsers, FaClipboardList, FaFilePdf, FaUserShield, FaSignOutAlt, FaBars, FaTimes, FaVideo
+  FaUsers, FaClipboardList, FaFilePdf, FaUserShield, FaSignOutAlt, FaBars, FaTimes, FaVideo, FaGlobe
 } from "react-icons/fa";
 
 export default function Sidebar() {
@@ -107,6 +107,10 @@ export default function Sidebar() {
             <p className="text-xs text-blue-400 truncate mt-0.5">{session?.user?.role}</p>
           </div>
         </div>
+        <Link href="https://bawwabah.markazarabiyah.site" className="flex items-center justify-center gap-2 p-2.5 text-sky-300 hover:text-white hover:bg-sky-600 w-full rounded-lg transition-colors border border-sky-500/20 bg-sky-500/10 mb-2">
+          <FaGlobe />
+          <span className="text-sm font-semibold">Bawwabah</span>
+        </Link>
         <button onClick={handleLogout} className="flex items-center justify-center gap-2 p-2.5 text-red-400 hover:text-white hover:bg-red-500 w-full rounded-lg transition-colors border border-red-500/20 bg-red-500/10">
           <FaSignOutAlt />
           <span className="text-sm font-semibold">Keluar Sistem</span>
