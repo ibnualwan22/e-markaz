@@ -107,7 +107,7 @@ export default function Sidebar() {
             <p className="text-xs text-blue-400 truncate mt-0.5">{session?.user?.role}</p>
           </div>
         </div>
-        <Link href="https://bawwabah.markazarabiyah.site" className="flex items-center justify-center gap-2 p-2.5 text-sky-300 hover:text-white hover:bg-sky-600 w-full rounded-lg transition-colors border border-sky-500/20 bg-sky-500/10 mb-2">
+        <Link href="https://bawwabah.markazarabiyah.site/dashboard" className="flex items-center justify-center gap-2 p-2.5 text-sky-300 hover:text-white hover:bg-sky-600 w-full rounded-lg transition-colors border border-sky-500/20 bg-sky-500/10 mb-2">
           <FaGlobe />
           <span className="text-sm font-semibold">Bawwabah</span>
         </Link>

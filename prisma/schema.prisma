@@ -256,3 +256,11 @@ model Bookmark {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
+
+// SSO Bawwabah -> e-markaz: anti-replay token sekali pakai (tabel dibuat via
+// psql; build e-markaz tidak menjalankan migrate, jadi file migrasi ini
+// hanya dokumentasi — JANGAN paksa insert baris history).
+model SsoConsumedToken {
+  jti        String   @id
+  consumedAt DateTime @default(now())
+}

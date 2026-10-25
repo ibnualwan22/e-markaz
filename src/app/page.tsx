@@ -19,7 +19,8 @@ const formatTanggal = (d: Date) =>
   d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 
 export default async function Home() {
-  const [programs, periodeAktif, totalSantri] = await Promise.all([
+  const now = new Date();
+  const [programs, periodeAktif, periodeDaftar, totalSantri] = await Promise.all([
     prisma.program.findMany({
       where: { statusAktif: true },
       orderBy: { nama: "asc" },
@@ -27,6 +28,12 @@ export default async function Home() {
     }),
     prisma.periode.findFirst({
       where: { statusAktif: true },
+      orderBy: { tanggalBuka: "desc" },
+    }),
+    // Periode pendaftaran: yang jendela tanggalnya sedang terbuka. Bisa berbeda
+    // dari periode pembelajaran yang sedang berjalan (statusAktif).
+    prisma.periode.findFirst({
+      where: { tanggalBuka: { lte: now }, tanggalTutup: { gte: now } },
       orderBy: { tanggalBuka: "desc" },
     }),
     prisma.santri.count(),
@@ -38,26 +45,33 @@ export default async function Home() {
     <main className="min-h-screen bg-background">
       {/* ===== HERO ===== */}
       <section className="relative overflow-hidden">
-        {/* Background hero: gambar dummy — ganti file public/images/hero-bg.jpg untuk menggantinya */}
+        {/* Background hero: dua potongan dari foto yang sama — potongan tegak 4:5
+            untuk HP, potongan lebar 16:9 untuk layar besar (md+). Browser hanya
+            memuat yang tampil. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('/images/hero-bg.jpg')" }}
+          className="pointer-events-none absolute inset-0 bg-cover bg-center md:hidden"
+          style={{ backgroundImage: "url('/images/hero-bg-mobile.jpg')" }}
         />
-        <div className="pointer-events-none absolute inset-0 bg-black/50" />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 hidden bg-cover bg-center md:block"
+          style={{ backgroundImage: "url('/images/hero-bg-desktop.jpg')" }}
+        />
+        <div className="pointer-events-none absolute inset-0 bg-black/60" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,transparent_0%,rgba(5,5,5,0.55)_78%)]" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-[#050505]" />
         <div className="relative mx-auto max-w-4xl px-6 pb-20 pt-24 text-center md:pt-32">
-          {periodeAktif && (
+          {periodeDaftar && (
             <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-1.5 text-sm text-gray-300">
               <FaCalendarAlt className="text-primary" />
-              Pendaftaran {periodeAktif.nama} dibuka s.d. {formatTanggal(periodeAktif.tanggalTutup)}
+              Pendaftaran {periodeDaftar.nama} dibuka s.d. {formatTanggal(periodeDaftar.tanggalTutup)}
             </p>
           )}
           <h1 className="mb-6 text-4xl font-bold leading-tight text-white md:text-6xl">
             Belajar <span className="text-primary">Bahasa Arab</span> Online, Terstruktur dari Dasar
           </h1>
-          <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-gray-400">
+          <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-gray-300">
             Program online Markaz Arabiyah: kelas live via Zoom bersama pengajar, modul PDF untuk
             belajar mandiri, dan portal santri untuk memantau materi serta kehadiran Anda.
           </p>
