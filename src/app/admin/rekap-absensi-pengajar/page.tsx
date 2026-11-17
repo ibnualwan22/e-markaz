@@ -1,8 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import VerifyButton from "./VerifyButton";
-import { FaExternalLinkAlt } from "react-icons/fa";
 import ExportExcelButton from "@/components/ExportExcelButton";
-
+import EditKehadiran from "./EditKehadiran";
 
 export default async function RekapAbsensiPengajar({ searchParams }: { searchParams: Promise<{ programId?: string }> }) {
   const resolvedParams = await searchParams;
@@ -13,43 +11,53 @@ export default async function RekapAbsensiPengajar({ searchParams }: { searchPar
 
   const selectedProgramId = resolvedParams.programId || (programs.length > 0 ? programs[0].id : null);
 
-  let absensiData: any[] = [];
+  let sesiList: any[] = [];
+  let pengajarList: { id: string; username: string }[] = [];
+  let ringkasan: { username: string; jumlah: number }[] = [];
 
   if (selectedProgramId) {
-    absensiData = await prisma.absensiPengajar.findMany({
-      where: {
-        sesi: {
-          programId: selectedProgramId
-        }
-      },
+    sesiList = await prisma.sesiAbsensi.findMany({
+      where: { programId: selectedProgramId },
       include: {
-        sesi: true,
-        pengajar: true
+        absensiPengajars: { include: { pengajar: true } }
       },
-      orderBy: {
-        sesi: { tanggal: 'desc' }
-      }
+      orderBy: { tanggal: 'desc' }
     });
+
+    pengajarList = await prisma.user.findMany({
+      where: { role: { name: "Pengajar" } },
+      select: { id: true, username: true },
+      orderBy: { username: 'asc' }
+    });
+
+    const grouped = await prisma.absensiPengajar.groupBy({
+      by: ['pengajarId'],
+      where: { sesi: { programId: selectedProgramId } },
+      _count: { _all: true },
+    });
+    const namaById = new Map(pengajarList.map(p => [p.id, p.username]));
+    ringkasan = grouped
+      .map(g => ({ username: namaById.get(g.pengajarId) ?? g.pengajarId, jumlah: g._count._all }))
+      .sort((a, b) => b.jumlah - a.jumlah);
   }
 
-  const exportData = absensiData.map((item, index) => ({
-    "No": index + 1,
-    "Nama Pengajar": item.pengajar.username,
-    "Nomor Sesi": item.sesi.nomorSesi,
-    "Judul Sesi": item.sesi.judul,
-    "Tanggal": new Date(item.sesi.tanggal).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
-    "Bukti SS": item.screenshotUrl,
-    "Status Validasi": item.statusValidasi
-  }));
+  const exportData = sesiList.flatMap((sesi) =>
+    sesi.absensiPengajars.map((item: any) => ({
+      "Nama Pengajar": item.pengajar.username,
+      "Nomor Sesi": sesi.nomorSesi,
+      "Judul Sesi": sesi.judul,
+      "Tanggal": new Date(sesi.tanggal).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+    }))
+  );
 
   return (
     <div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-border pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-2">Verifikasi Absensi Pengajar</h1>
-          <p className="text-gray-400">Pastikan screenshot kehadiran valid.</p>
+          <h1 className="text-2xl font-bold text-white mb-2">Rekap Absensi Pengajar</h1>
+          <p className="text-gray-400">Kehadiran pengajar tercatat otomatis saat menyimpan absensi santri. Admin dapat menandai hadir / menghapus di sini.</p>
         </div>
-        
+
         <div className="mt-4 md:mt-0 flex flex-wrap gap-2 items-center">
           <form className="flex gap-2">
              <select name="programId" defaultValue={selectedProgramId || ""} className="form-control max-w-sm w-full">
@@ -59,59 +67,50 @@ export default async function RekapAbsensiPengajar({ searchParams }: { searchPar
              </select>
              <button type="submit" className="btn btn-primary">Filter</button>
           </form>
-          <ExportExcelButton 
-            data={exportData} 
-            filename="Rekap_Absensi_Pengajar" 
-            sheetName="Pengajar_Absensi" 
+          <ExportExcelButton
+            data={exportData}
+            filename="Rekap_Absensi_Pengajar"
+            sheetName="Pengajar_Absensi"
           />
         </div>
       </div>
 
-      <div className="card table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>No</th>
-              <th>Nama Pengajar</th>
-              <th>Sesi & Tanggal</th>
-              <th>Bukti SS</th>
-              <th>Status Verifikasi</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-             {absensiData.length === 0 ? (
-               <tr><td colSpan={6} className="text-center">Belum ada pengajar yang upload SS di program ini</td></tr>
-             ) : (
-               absensiData.map((item, index) => (
-                 <tr key={item.id}>
-                   <td>{index + 1}</td>
-                   <td className="font-semibold text-white">{item.pengajar.username}</td>
-                   <td>
-                     <div className="text-blue-400 inline-block">Sesi {item.sesi.nomorSesi}: {item.sesi.judul}</div>
-                     <div className="text-xs text-gray-400">{new Date(item.sesi.tanggal).toLocaleDateString('id-ID')}</div>
-                   </td>
-                   <td>
-                     <a href={item.screenshotUrl} target="_blank" className="flex items-center gap-2 text-sm text-primary hover:underline">
-                       <img src={item.screenshotUrl} alt="SS" className="w-16 h-10 object-cover border border-white/20 rounded shadow" />
-                     </a>
-                   </td>
-                   <td>
-                     <span className={`badge ${
-                       item.statusValidasi === 'VALID' ? 'badge-success' : 
-                       item.statusValidasi === 'REJECTED' ? 'badge-danger' : 'badge-warning'
-                     }`}>
-                       {item.statusValidasi}
-                     </span>
-                   </td>
-                   <td>
-                     <VerifyButton id={item.id} statusValidasi={item.statusValidasi} pengajarName={item.pengajar.username} />
-                   </td>
-                 </tr>
-               ))
-             )}
-          </tbody>
-        </table>
+      {selectedProgramId && ringkasan.length > 0 && (
+        <div className="card mb-6">
+          <h2 className="font-bold text-white mb-3">Jumlah Kehadiran per Pengajar (program ini)</h2>
+          <div className="flex flex-wrap gap-2">
+            {ringkasan.map(r => (
+              <span key={r.username} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/20 text-primary border border-primary/20">
+                {r.username} <span className="font-black">{r.jumlah} sesi</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-6">
+        {sesiList.length === 0 ? (
+          <div className="card text-center text-gray-500">Belum ada sesi di program ini.</div>
+        ) : (
+          sesiList.map((sesi) => (
+            <div key={sesi.id} className="card bg-surface/50">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 pb-3 border-b border-border">
+                <div>
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <span className="bg-primary/20 text-primary px-2 py-1 rounded text-sm">Sesi {sesi.nomorSesi}</span>
+                    {sesi.judul}
+                  </h2>
+                  <p className="text-gray-400 mt-1 text-sm">{new Date(sesi.tanggal).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                </div>
+              </div>
+              <EditKehadiran
+                sesiId={sesi.id}
+                pengajars={pengajarList}
+                hadir={sesi.absensiPengajars.map((a: any) => ({ id: a.id, pengajarId: a.pengajarId, username: a.pengajar.username }))}
+              />
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

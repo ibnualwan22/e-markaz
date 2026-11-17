@@ -159,14 +159,15 @@ model AbsensiSantri {
   updatedAt DateTime @updatedAt
 }
 
+// Kehadiran pengajar per sesi. Dulu dibuktikan dengan upload screenshot
+// (screenshotUrl + statusValidasi, dihapus 17 Nov 2026): sejak itu absen
+// santri yang disimpan pengajar otomatis tercatat sebagai absen pengajar.
 model AbsensiPengajar {
   id            String      @id @default(cuid())
-  screenshotUrl String      // Cloudinary URL
-  statusValidasi String     @default("PENDING") // PENDING, VALID, REJECTED
-  
+
   sesiId        String
   sesi          SesiAbsensi @relation(fields: [sesiId], references: [id], onDelete: Cascade)
-  
+
   pengajarId    String
   pengajar      User        @relation(fields: [pengajarId], references: [id], onDelete: Cascade)
 

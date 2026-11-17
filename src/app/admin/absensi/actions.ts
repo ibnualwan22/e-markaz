@@ -118,29 +118,39 @@ export async function createSesi(data: { programId: string }) {
   }
 }
 
-export async function saveAbsenSantri(sesiId: string, absens: { santriId: string, status: string }[]) {
+// Simpan absen santri; pengajar yang menyimpan otomatis tercatat hadir
+// di sesi itu (tanpa upload bukti) — satu transaksi, gagal semua bila gagal.
+export async function saveAbsenSantri(sesiId: string, absens: { santriId: string, status: string }[], pengajarId?: string) {
   try {
-    await prisma.$transaction(
-      absens.map(a => 
+    await prisma.$transaction([
+      ...absens.map(a =>
         prisma.absensiSantri.upsert({
           where: { sesiId_santriId: { sesiId, santriId: a.santriId } },
           update: { status: a.status },
           create: { sesiId, santriId: a.santriId, status: a.status }
         })
-      )
-    );
+      ),
+      ...(pengajarId ? [
+        prisma.absensiPengajar.upsert({
+          where: { sesiId_pengajarId: { sesiId, pengajarId } },
+          update: {},
+          create: { sesiId, pengajarId }
+        })
+      ] : []),
+    ]);
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
 }
 
-export async function saveAbsenPengajar(sesiId: string, pengajarId: string, screenshotUrl: string) {
+// Catat pengajar hadir di sebuah sesi (dipakai rekap admin untuk koreksi).
+export async function saveAbsenPengajar(sesiId: string, pengajarId: string) {
   try {
     await prisma.absensiPengajar.upsert({
       where: { sesiId_pengajarId: { sesiId, pengajarId } },
-      update: { screenshotUrl, statusValidasi: "VALID" },
-      create: { sesiId, pengajarId, screenshotUrl, statusValidasi: "VALID" }
+      update: {},
+      create: { sesiId, pengajarId }
     });
     return { success: true };
   } catch (error: any) {

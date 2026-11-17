@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Alert, Toast } from "@/lib/swal";
-import { getSesiByProgram, getSantriByProgram, createSesi, saveAbsenSantri, saveAbsenPengajar } from "./actions";
-import { FaPlus, FaCheck, FaTimes, FaCamera } from "react-icons/fa";
+import { getSesiByProgram, getSantriByProgram, createSesi, saveAbsenSantri } from "./actions";
+import { FaPlus, FaCheck, FaTimes } from "react-icons/fa";
 import { useSession } from "next-auth/react";
 
 export default function ManajemenAbsensi() {
@@ -17,9 +17,6 @@ export default function ManajemenAbsensi() {
 
   
   const [absensiMap, setAbsensiMap] = useState<Record<string, Record<string, string>>>({}); // sesiId -> santriId -> status
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [activeSesiForUpload, setActiveSesiForUpload] = useState<string>("");
 
   useEffect(() => {
     fetch("/api/pendaftaran/program").then(r => r.json()).then(setPrograms);
@@ -82,44 +79,14 @@ export default function ManajemenAbsensi() {
     }));
     
     if (listToSave.length === 0) return Toast.fire({ icon: 'warning', title: 'Belum ada opsi absensi yang dipilih' });
-    
-    const res = await saveAbsenSantri(sesiId, listToSave);
+
+    // Menyimpan absen santri otomatis mencatat pengajar yang login hadir di sesi ini.
+    const res = await saveAbsenSantri(sesiId, listToSave, userSession?.user?.id);
     if (res.success) {
-      Toast.fire({ icon: 'success', title: 'Absensi berhasil disimpan!' });
+      Toast.fire({ icon: 'success', title: 'Absensi berhasil disimpan! Kehadiran pengajar tercatat.' });
       loadSesiAndSantri(selectedProgram); // re-sync
     } else {
       Alert.fire('Gagal menyimpan', res.error, 'error');
-    }
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !activeSesiForUpload || !userSession?.user?.id) return;
-    
-    setIsUploading(true);
-    const fd = new FormData();
-    fd.append('file', file);
-    
-    try {
-      const res = await fetch('/api/upload', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (data.url) {
-        const dbRes = await saveAbsenPengajar(activeSesiForUpload, userSession.user.id, data.url);
-        if (dbRes.success) {
-          Toast.fire({ icon: 'success', title: 'Bukti SS berhasil diupload!' });
-          loadSesiAndSantri(selectedProgram);
-        } else {
-          Alert.fire('Gagal', dbRes.error, 'error');
-        }
-      } else {
-        throw new Error(data.error);
-      }
-    } catch (error: any) {
-      Alert.fire('Error upload', error.message || 'Terjadi kesalahan sistem', 'error');
-    } finally {
-      setIsUploading(false);
-      setActiveSesiForUpload("");
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -170,12 +137,6 @@ export default function ManajemenAbsensi() {
                  </div>
                  
                  <div className="mt-4 md:mt-0 flex gap-2">
-                   <button onClick={() => {
-                     setActiveSesiForUpload(sesi.id);
-                     fileInputRef.current?.click();
-                   }} disabled={isUploading} className="btn bg-gray-800 text-gray-300 hover:text-white">
-                     <FaCamera /> {isUploading && activeSesiForUpload === sesi.id ? "Mengupload..." : "Upload SS Pengajar"}
-                   </button>
                    <button onClick={() => handleSaveAbsensi(sesi.id)} className="btn btn-primary">
                      <FaCheck /> Simpan Absensi Santri
                    </button>
@@ -185,11 +146,11 @@ export default function ManajemenAbsensi() {
                <div className="mb-4">
                   {sesi.absensiPengajars.length > 0 ? (
                     <div className="bg-green-500/10 border border-green-500/30 p-3 rounded-lg flex items-center gap-4 text-sm text-green-400 mb-4">
-                      <FaCheck /> Pengajar sudah upload Screenshot. (<a href={sesi.absensiPengajars[0].screenshotUrl} target="_blank" className="underline hover:text-white">Lihat SS</a>) (Validasi: {sesi.absensiPengajars[0].statusValidasi})
+                      <FaCheck /> Pengajar sudah absen: {sesi.absensiPengajars.map((a: any) => a.pengajar.username).join(", ")}
                     </div>
                   ) : (
                     <div className="bg-yellow-500/10 border border-yellow-500/30 p-3 rounded-lg text-sm text-yellow-500 mb-4">
-                      ⚠ Pengajar belum mengupload screenhot sesi ini.
+                      ⚠ Pengajar belum absen di sesi ini. Simpan absensi santri untuk mencatat kehadiran pengajar.
                     </div>
                   )}
                </div>
@@ -244,15 +205,6 @@ export default function ManajemenAbsensi() {
            ))}
         </div>
       )}
-
-      {/* Hidden file input target */}
-      <input 
-        type="file" 
-        accept="image/*,application/pdf" 
-        className="hidden" 
-        ref={fileInputRef} 
-        onChange={handleFileUpload} 
-      />
 
       {/* Modal is removed since addition is completely dynamic and one-click */}
     </div>
