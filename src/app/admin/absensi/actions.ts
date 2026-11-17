@@ -73,8 +73,13 @@ export async function getSesiByProgram(programId: string) {
 }
 
 export async function getSantriByProgram(programId: string) {
+  // Hanya santri aktif dari periode yang sedang aktif (Oktober yang sudah
+  // dinonaktifkan tidak ikut tampil meski status pendaftarannya DITERIMA).
   return await prisma.santri.findMany({
-    where: { pendaftaran: { programId, status: "DITERIMA" } },
+    where: {
+      isActive: true,
+      pendaftaran: { programId, status: "DITERIMA", periode: { statusAktif: true } },
+    },
     include: {
       pendaftaran: true
     },
